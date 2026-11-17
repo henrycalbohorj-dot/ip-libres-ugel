@@ -1,0 +1,704 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#222A34">
+<meta name="mobile-web-app-capable" content="yes">
+<title>IP Libres · UGEL</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill='%23E8EDF2' d='M20 4l16 8-16 8-16-8z'/%3E%3Cpath fill='%2396A3B1' d='M4 12l16 8v14L4 26z'/%3E%3Cpath fill='%23C6CFD9' d='M20 20l16-8v14l-16 8z'/%3E%3Ccircle cx='25' cy='24' r='1.8' fill='%2316B876'/%3E%3Ccircle cx='30' cy='21.5' r='1.8' fill='%23EF4B4B'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E9EEF2;--panel:#FFFFFF;--ink:#16202B;--mut:#5B6877;--line:#D3DBE3;
+  --cab1:#2A333F;--cab2:#1D242D;--plate1:#F1F4F7;--plate2:#CCD4DC;--plate3:#B7C1CB;--edge:#8794A2;
+  --acc:#2257E6;--acc-ink:#fff;--tape:#FFD43B;
+  --libre:#16B876;--activa:#EF4B4B;--ausente:#F2A21B;--reservada:#8A5CF6;--dhcp:#0FB5C9;
+  --libre-bg:#DDF6EC;--activa-bg:#FDE4E4;--ausente-bg:#FDF0D8;--reservada-bg:#ECE5FE;--dhcp-bg:#DAF5F8;
+  --f-num:'Chakra Petch',ui-sans-serif,system-ui,sans-serif;
+  --f-txt:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#12171D;--panel:#1B222B;--ink:#E6ECF2;--mut:#93A1B0;--line:#2D3742;
+  --cab1:#0F1419;--cab2:#090C10;--plate1:#46525F;--plate2:#333D48;--plate3:#2A323C;--edge:#151A20;
+  --acc:#4C7DFF;--tape:#F5C93A;
+  --libre-bg:#123526;--activa-bg:#3A1A1B;--ausente-bg:#3A2B10;--reservada-bg:#2A2045;--dhcp-bg:#0F3138;
+}}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--f-txt);-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.mono{font-family:var(--f-num);letter-spacing:.02em}
+.mut{color:var(--mut);font-size:14px}
+
+/* ---------- Encabezado ---------- */
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  padding:10px 16px 8px;padding-top:calc(10px + env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+.barra{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.logo{width:42px;height:42px;flex:none;filter:drop-shadow(0 4px 5px rgba(20,30,45,.25))}
+.titulo{flex:1;min-width:0}
+.titulo h1{margin:0;font:700 22px/1.05 var(--f-num);letter-spacing:.01em}
+.titulo p{margin:2px 0 0;font-size:13px;line-height:1.25;color:var(--mut)}
+.escanear{--p:0;position:relative;width:50px;height:50px;border-radius:50%;border:0;flex:none;padding:0;
+  background:conic-gradient(var(--acc) calc(var(--p)*1turn),var(--line) 0);display:grid;place-items:center}
+.escanear::before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--panel);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.escanear svg{position:relative;width:22px;height:22px;color:var(--acc)}
+.escanear.girando svg{animation:gira 1s linear infinite}
+.escanear:disabled{cursor:default}
+@keyframes gira{to{transform:rotate(360deg)}}
+
+main{max-width:980px;margin:0 auto;padding:14px 16px 56px}
+.aviso{background:var(--activa-bg);color:var(--activa);padding:10px 12px;border-radius:12px;margin-bottom:12px;font-size:14px}
+
+/* ---------- Alertas ---------- */
+.alertas{margin-bottom:12px;display:grid;gap:8px}
+.al{background:var(--activa-bg);color:var(--activa);border:2px solid var(--activa);border-radius:14px;padding:12px 14px;font-size:14px}
+.al b{font-size:15px}.al .eq{color:var(--ink);margin:4px 0 0;font-size:14px}
+.al.cambio{background:var(--ausente-bg);color:color-mix(in srgb,var(--ausente) 70%,var(--ink));border-color:var(--ausente)}
+.al.resumen{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:left}
+.al.resumen span{white-space:nowrap;font-size:13px}
+.acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acciones button{flex:1}
+
+/* ---------- Botones ---------- */
+.btn,.acciones button,.tape-acc button{border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:10px 14px;font-weight:700;font-size:15px;
+  box-shadow:0 1px 0 rgba(255,255,255,.6) inset,0 2px 0 var(--line)}
+.btn:active,.acciones button:active,.tape-acc button:active{transform:translateY(1px);box-shadow:none}
+.pri,.acciones button.pri,.tape-acc button.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);box-shadow:0 2px 0 color-mix(in srgb,var(--acc) 60%,#000)}
+button:disabled{opacity:.5;cursor:default}
+
+/* ---------- Segmentos ---------- */
+.tabs{display:flex;gap:4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.tabs button{flex:1;white-space:nowrap;border:0;background:none;border-radius:10px;padding:9px 12px;font-weight:700;font-size:15px;color:var(--mut)}
+.tabs button small{font:500 13px var(--f-num);margin-left:4px}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+
+/* ---------- Etiqueta de rotuladora con la IP sugerida ---------- */
+.sug{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin:4px 0 16px}
+.tape{position:relative;display:inline-flex;flex-direction:column;background:var(--tape);color:#1C1A12;padding:9px 26px 11px;transform:rotate(-1.5deg);
+  clip-path:polygon(0 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%);filter:drop-shadow(0 6px 8px rgba(110,80,0,.28))}
+.tape::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.45),transparent 38%,transparent 70%,rgba(0,0,0,.06));pointer-events:none}
+.tape-t{font-size:12px;font-weight:700;opacity:.75}
+.tape-ip{font:700 30px/1.05 var(--f-num);letter-spacing:.015em}
+.tape-acc{display:flex;gap:8px;flex-wrap:wrap}
+.sug .mut{flex-basis:100%;margin:0}
+.vacio{display:flex;align-items:center;gap:14px;background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:14px}
+.vacio svg{width:64px;height:64px;flex:none}
+
+/* ---------- LEDs de estado (leyenda + filtro) ---------- */
+.leds{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+@media (min-width:640px){.leds{grid-template-columns:repeat(5,1fr)}}
+@media (max-width:639px){.leds .led:last-child:nth-child(odd){grid-column:span 2}}
+.led{--c:var(--mut);display:flex;align-items:center;gap:10px;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:9px 12px;text-align:left}
+.led i{width:11px;height:11px;border-radius:50%;flex:none;background:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 22%,transparent),0 0 10px var(--c)}
+.led b{font:700 22px/1 var(--f-num)}.led span{font-size:13px;color:var(--mut);line-height:1.15}
+.led.on{border-color:var(--c);background:color-mix(in srgb,var(--c) 12%,var(--panel))}
+.k-libre{--c:var(--libre)}.k-ocupada{--c:var(--activa)}.k-ausente{--c:var(--ausente)}.k-asignada{--c:var(--reservada)}.k-dhcp{--c:var(--dhcp)}
+.link{background:none;border:0;padding:4px 0;margin:0 0 10px;color:color-mix(in srgb,var(--ausente) 70%,var(--ink));text-decoration:underline;font-size:14px;text-align:left}
+input{font:inherit;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
+.buscar{margin:4px 0 16px}
+
+/* ---------- Rack 3D ---------- */
+.rack{position:relative;padding:16px 12px 6px;border-radius:18px;
+  background:linear-gradient(180deg,var(--cab1),var(--cab2));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),inset 0 18px 30px rgba(0,0,0,.35),0 18px 30px rgba(20,30,45,.25)}
+.rack::before,.rack::after{content:"";position:absolute;top:10px;bottom:10px;width:6px;border-radius:3px;
+  background:repeating-linear-gradient(180deg,#5D6875 0 6px,#20262E 6px 9px,#5D6875 9px 18px)}
+.rack::before{left:3px}.rack::after{right:3px}
+.unidad{--rx:9deg;display:grid;grid-template-columns:24px 1fr 24px;margin:0 2px 36px;border-radius:7px;transform-origin:50% 0;transform:perspective(900px) rotateX(var(--rx));
+  background:linear-gradient(180deg,var(--plate1),var(--plate2) 55%,var(--plate3));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(0,0,0,.18),0 9px 0 var(--edge),0 16px 18px rgba(0,0,0,.5)}
+.rack:not(.listo) .unidad{animation:entra .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i)*55ms)}
+@keyframes entra{from{opacity:0;transform:perspective(900px) rotateX(var(--rx)) translate3d(0,26px,-140px)}}
+.oreja{display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0}
+.oreja::before,.oreja::after{content:"";width:9px;height:9px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#FDFEFF,#9AA6B2 60%,#6B7783);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+.oreja span{writing-mode:vertical-rl;transform:rotate(180deg);font:600 12px var(--f-num);color:var(--mut);letter-spacing:.04em}
+.puertos{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:12px 4px 14px}
+@media (min-width:760px){.puertos{grid-template-columns:repeat(12,1fr)}.unidad{--rx:18deg;margin-bottom:28px}}
+.port{--c:#8794A2;position:relative;aspect-ratio:1;border:0;border-radius:8px;padding:6% 0 0;display:flex;justify-content:center;align-items:flex-start;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--c) 55%,#fff),var(--c) 72%);
+  color:#fff;font:700 clamp(13px,3.6vw,16px)/1 var(--f-num);text-shadow:0 1px 1px rgba(0,0,0,.3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -2px 0 rgba(0,0,0,.15),0 3px 0 color-mix(in srgb,var(--c) 55%,#000),0 6px 7px rgba(0,0,0,.3);
+  transition:transform .08s,box-shadow .08s}
+.port::after{content:"";position:absolute;left:25%;right:25%;bottom:13%;height:34%;
+  background:linear-gradient(180deg,rgba(6,10,16,.78),rgba(6,10,16,.5));
+  clip-path:polygon(0 0,100% 0,100% 70%,70% 70%,70% 100%,30% 100%,30% 70%,0 70%)}
+.port:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 0 0 color-mix(in srgb,var(--c) 55%,#000),0 2px 3px rgba(0,0,0,.3)}
+.port.nota::before{content:"";position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff}
+.port.alarma{outline:3px solid var(--ausente);outline-offset:2px;animation:parpadea 1.1s steps(2,start) infinite}
+@keyframes parpadea{50%{outline-color:transparent}}
+.port.dim{filter:grayscale(1);opacity:.22}
+.p-libre{--c:var(--libre)}.p-ocupada{--c:var(--activa)}.p-ausente{--c:var(--ausente)}.p-asignada{--c:var(--reservada)}.p-dhcp{--c:var(--dhcp)}
+.port.dhcpon::before{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#3DEBFF;box-shadow:0 0 0 1.5px rgba(0,0,0,.25),0 0 8px #3DEBFF}
+.port.on::before{content:"";position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#3DFFA0;box-shadow:0 0 0 1.5px rgba(0,0,0,.25),0 0 8px #3DFFA0}
+
+.leyenda{margin-top:18px;font-size:14px;color:var(--mut);max-width:72ch}
+.leyenda p{margin:6px 0}
+.leyenda b{display:inline-flex;align-items:center;gap:6px;color:var(--ink)}
+.leyenda b i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+
+/* ---------- Hoja inferior ---------- */
+.velo{position:fixed;inset:0;background:rgba(8,12,18,.55);z-index:10}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;background:var(--panel);border-radius:22px 22px 0 0;padding:10px 18px calc(20px + env(safe-area-inset-bottom));
+  max-height:90vh;overflow:auto;max-width:560px;margin:0 auto;box-shadow:0 -10px 40px rgba(0,0,0,.35);animation:sube .22s ease-out}
+.sheet::before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 10px}
+@keyframes sube{from{transform:translateY(40px);opacity:.4}}
+.sheet h2{font:700 26px var(--f-num);margin:0 0 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet h2 button{border:1px solid var(--line);background:var(--panel);border-radius:50%;width:40px;height:40px;font-size:16px}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700}
+.c-libre{background:var(--libre-bg);color:var(--libre)}.c-ocupada{background:var(--activa-bg);color:var(--activa)}
+.c-ausente{background:var(--ausente-bg);color:color-mix(in srgb,var(--ausente) 70%,var(--ink))}.c-asignada{background:var(--reservada-bg);color:var(--reservada)}.c-dhcp{background:var(--dhcp-bg);color:var(--dhcp)}
+dl{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:0 0 14px}
+dt{color:var(--mut)}dd{margin:0;word-break:break-word}
+label{display:block;font-size:14px;color:var(--mut);margin-top:12px}label input{margin-top:4px}
+.check{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:15px}.check input{width:22px;height:22px;margin:0;flex:none}
+.alerta{background:var(--ausente-bg);color:color-mix(in srgb,var(--ausente) 65%,var(--ink));padding:10px 12px;border-radius:12px;margin:0 0 12px;font-size:14px}
+pre.cmd{background:var(--bg);border:1px solid var(--line);padding:12px;border-radius:12px;white-space:pre-wrap;word-break:break-all;font:500 14px/1.45 var(--f-num);margin:6px 0 10px;color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:999px;z-index:20;font-size:15px;max-width:90vw}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* ---------- Navegación inferior ---------- */
+main{padding-bottom:120px}
+.dock{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:8;display:flex;gap:4px;padding:6px;
+  background:color-mix(in srgb,var(--panel) 86%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:22px;box-shadow:0 12px 30px rgba(10,20,35,.28)}
+.dock button{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:104px;padding:8px 16px;border:0;background:none;border-radius:16px;font-weight:700;font-size:13px;color:var(--mut)}
+.dock svg{width:24px;height:24px}
+.dock button.on{background:var(--ink);color:var(--bg)}
+.dock .dock-a{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:96px;padding:8px 14px;border-radius:16px;font-weight:700;font-size:13px;color:var(--mut);text-decoration:none}
+@media (max-width:420px){.dock button,.dock .dock-a{min-width:0;padding:8px 12px}}
+.dock .num{position:absolute;top:3px;right:16px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--ausente);color:#241800;font:700 12px/20px var(--f-num);text-align:center}
+
+/* ---------- Inventario ---------- */
+.inv-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:2px 0 12px}
+.inv-head h2{margin:0;font:700 28px/1.1 var(--f-num)}
+.inv-head p{margin:4px 0 0;color:var(--mut);font-size:14px}
+.herr{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.herr .btn{font-size:14px;padding:8px 12px;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.filtros{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px -16px 4px;padding:0 16px 4px}
+.filtro{white-space:nowrap;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 13px;font-size:14px;font-weight:700}
+.filtro small{font:500 13px var(--f-num);margin-left:5px;opacity:.75}
+.filtro.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.filtro.aviso-f{border-color:var(--ausente)}
+.grupo{margin:18px 0 6px}
+.grupo h3{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 8px;font-size:15px;color:var(--mut)}
+.grupo h3 span{font:600 13px var(--f-num)}
+.ficha{display:grid;grid-template-columns:44px 1fr auto;gap:12px;align-items:center;width:100%;text-align:left;margin-bottom:7px;
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:0 1px 0 var(--line)}
+.ficha:active{transform:scale(.99)}
+.ico{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:22px;
+  background:linear-gradient(180deg,var(--plate1),var(--plate2));box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 2px 0 var(--plate3)}
+.ficha b{display:block;font-size:16px;line-height:1.25}
+.ficha .det{display:block;font-size:13px;color:var(--mut);line-height:1.3;margin-top:2px}
+.ipc{--c:var(--line);display:flex;align-items:center;gap:7px;font:600 15px var(--f-num);white-space:nowrap}
+.ipc i{width:9px;height:9px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c)}
+.ipc.sin{color:var(--mut);font:500 13px var(--f-txt)}
+.flag{display:inline-block;margin-top:5px;font-size:12px;font-weight:700;border-radius:7px;padding:2px 8px;
+  color:color-mix(in srgb,var(--ausente) 65%,var(--ink));background:var(--ausente-bg)}
+.flag.rojo{color:var(--activa);background:var(--activa-bg)}
+.flag.dhcp{color:color-mix(in srgb,var(--dhcp) 60%,var(--ink));background:var(--dhcp-bg);margin-left:4px}
+.vacio-inv{text-align:center;color:var(--mut);padding:30px 10px}
+@media (min-width:900px){.lista{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}}
+
+/* ---------- Formulario de ficha ---------- */
+select,textarea{font:inherit;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink)}
+textarea{min-height:70px;resize:vertical}
+label select,label textarea{margin-top:4px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.ipline{display:flex;gap:8px;margin-top:4px}.ipline input{margin:0;font-family:var(--f-num);font-size:17px}
+.ipline button{white-space:nowrap}
+.ipest{font-size:13px;margin-top:5px;min-height:18px}
+.ipest.ok{color:var(--libre)}.ipest.mal{color:var(--activa)}.ipest.ojo{color:color-mix(in srgb,var(--ausente) 70%,var(--ink))}
+.revbox{background:var(--ausente-bg);border-radius:12px;padding:10px 12px;margin:0 0 6px;font-size:14px}
+.revbox ul{margin:6px 0 8px;padding-left:18px}
+.meta{font-size:13px;color:var(--mut);margin-top:14px}
+.hist{list-style:none;margin:6px 0 0;padding:0;font-size:13px;color:var(--mut)}
+.hist li{padding:5px 0;border-top:1px solid var(--line)}
+.peligro{color:var(--activa)!important;border-color:color-mix(in srgb,var(--activa) 40%,var(--line))!important}
+.inv-btns{display:grid;gap:8px;margin-top:4px}
+.inv-btns button{width:100%;text-align:left;display:flex;align-items:center;gap:10px}
+</style>
+</head>
+<body>
+<header>
+  <div class="barra">
+    <svg class="logo" viewBox="0 0 40 40" aria-hidden="true">
+      <path fill="#E8EDF2" d="M20 4l16 8-16 8-16-8z"/><path fill="#96A3B1" d="M4 12l16 8v14L4 26z"/><path fill="#C6CFD9" d="M20 20l16-8v14l-16 8z"/>
+      <path fill="#2A333F" d="M22 25.6l2.6-1.3v2.2L22 27.8zM26 23.6l2.6-1.3v2.2L26 25.8zM30 21.6l2.6-1.3v2.2L30 23.8z"/>
+      <circle cx="23.3" cy="23.4" r="1" fill="#16B876"/><circle cx="27.3" cy="21.4" r="1" fill="#EF4B4B"/><circle cx="31.3" cy="19.4" r="1" fill="#16B876"/>
+    </svg>
+    <div class="titulo"><h1>IP Libres</h1><p id="hora">Conectando…</p></div>
+    <button id="btnScan" class="escanear" type="button" aria-label="Escanear la red ahora">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+    </button>
+  </div>
+</header>
+<main>
+  <div id="aviso" class="aviso" hidden></div>
+  <section id="vRed">
+    <div id="alertas" class="alertas"></div>
+    <nav class="tabs" id="tabs" aria-label="Segmento de red"></nav>
+    <section class="sug" id="sug" aria-live="polite"></section>
+    <div class="leds" id="chips"></div>
+    <div id="noreg"></div>
+    <input id="q" class="buscar" type="search" placeholder="Busca persona, área, PC o número" autocomplete="off">
+    <div class="rack" id="rack"></div>
+    <div class="leyenda" id="leyenda"></div>
+  </section>
+  <section id="vInv" hidden>
+    <div class="inv-head">
+      <div><h2>Inventario</h2><p id="invSub">Cargando…</p></div>
+      <button type="button" class="btn pri" id="bNueva">+ Agregar equipo</button>
+    </div>
+    <input id="iq" type="search" placeholder="Busca nombre, área, IP, switch o nota" autocomplete="off">
+    <div class="filtros" id="invFiltros"></div>
+    <div id="invLista"></div>
+    <div class="herr" id="invHerr" style="margin-top:20px"></div>
+  </section>
+</main>
+<nav class="dock" aria-label="Secciones">
+  <button type="button" data-vista="red" id="dRed">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M10 7h.01M13 7h.01M7 17h.01M10 17h.01M13 17h.01" stroke-width="2.6" stroke-linecap="round"/></svg>
+    Red
+  </button>
+  <button type="button" data-vista="inv" id="dInv">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="2.8"/></svg>
+    Inventario<span class="num" id="dNum" hidden></span>
+  </button>
+  <a href="/mapa" id="dMapa" class="dock-a">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l8 4.5-8 4.5-8-4.5z"/><path d="M4 12l8 4.5 8-4.5"/><path d="M4 16.5l8 4.5 8-4.5"/></svg>
+    Mapa 3D
+  </a>
+</nav>
+<div class="velo" id="velo" hidden></div>
+<section class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sIp">
+  <h2><span id="sIp"></span><button type="button" id="sCerrar" aria-label="Cerrar">✕</button></h2>
+  <div id="sInfo"></div>
+  <div id="sForm"></div>
+</section>
+<div class="toast" id="toast" hidden></div>
+<script>
+const $=s=>document.querySelector(s);
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const NOM={asignada:'Asignadas',libre:'Libres',ocupada:'Sin registrar',ausente:'Ausentes',dhcp:'Por DHCP'};
+const NOM1={asignada:'Asignada',libre:'Libre',ocupada:'Sin registrar',ausente:'Ausente',dhcp:'Equipo conocido por DHCP'};
+const ICON={PC:'🖥️',Laptop:'💻',Impresora:'🖨️',Fotocopiadora:'📠',Servidor:'🗄️','Wi-Fi':'📶','Cámara':'📹',Televisor:'📺','Teléfono IP':'☎️',Router:'🌐',Switch:'🔀',Otro:'📦'};
+let D=null,off=0,seg=+(ls.get('seg')||0),filtro=null,sugIdx=0,abierta=null,tCarga=null,tToast=null;
+let VISTA=ls.get('vista')==='inv'?'inv':'red',INVL=null,invVerCargada=0,invFiltro='todos',FICHA=null,borrarArmado=false;
+let RS=null,alAbiertas=false,rackListo=false,IPMAP={},EQR={};
+
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function hace(t){if(!t)return'nunca';const s=Math.max(0,Math.round((Date.now()+off-t)/1000));
+  if(s<60)return'hace '+s+' s';const m=Math.round(s/60);if(m<60)return'hace '+m+' min';
+  const h=Math.round(m/60);if(h<48)return'hace '+h+' h';return'hace '+Math.round(h/24)+' días'}
+function toast(t){const e=$('#toast');e.textContent=t;e.hidden=false;clearTimeout(tToast);tToast=setTimeout(()=>e.hidden=true,2600)}
+function aviso(t){const e=$('#aviso');e.textContent=t||'';e.hidden=!t}
+const durTxt=d=>{const m=/^(?:(\d+)\.)?(\d+):(\d+)/.exec(d||'');if(!m)return d||'?';const dd=+(m[1]||0),hh=+m[2];return dd?dd+(dd>1?' días':' día')+(hh?' '+hh+' h':''):hh+' h'};
+const ipNum=ip=>ip?ip.split('.').reduce((a,b)=>a*256+(+b||0),0):Infinity;
+const sinTilde=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+
+async function api(url,body){
+  const o=body?{method:'POST',headers:{'Content-Type':'application/json','X-Pin':ls.get('pin')||''},body:JSON.stringify(body)}:{cache:'no-store'};
+  const r=await fetch(url,o);const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(j.error||'Error '+r.status),{status:r.status});
+  return j;
+}
+// Ejecuta una acción protegida; si el servidor pide PIN, lo solicita y reintenta
+async function conPin(fn){
+  try{return await fn()}
+  catch(e){
+    if(e.status===401){const p=prompt('PIN del área de Informática:');if(p!==null){ls.set('pin',p);return conPin(fn)}return null}
+    toast(e.message);return null}
+}
+async function cargar(){
+  clearTimeout(tCarga);
+  try{
+    const j=await api('/api/estado');off=j.ahora-Date.now();D=j;
+    if(seg>=D.segmentos.length)seg=0;
+    IPMAP={};D.segmentos.forEach(s=>s.ips.forEach(x=>IPMAP[x.ip]=x));EQR=D.equiposRed||{};
+    aviso(D.ultimoEscaneo&&j.ahora-D.ultimoEscaneo>D.intervaloMin*3*60000?'Ojo: el último escaneo es de '+hace(D.ultimoEscaneo)+'. Los datos podrían no estar al día.':'');
+    render();
+    const n=(D.inventario||{}).revisar||0;$('#dNum').hidden=!n;$('#dNum').textContent=n;
+    if(VISTA==='inv'){if(D.inventario.version!==invVerCargada)cargarInv();else renderInv()}
+  }catch(e){aviso('No se pudo conectar con el servidor. ¿Estás conectado al Wi-Fi de la UGEL?')}
+  tCarga=setTimeout(cargar,D&&D.escaneando?3000:20000);
+}
+const libres=S=>S.ips.filter(x=>x.e==='libre'&&x.n>=S.sugerirDesde).sort((a,b)=>(a.visto||0)-(b.visto||0)||a.n-b.n);
+const invTxt=x=>(x.inv||[]).map(e=>[e.area,e.nombre].filter(Boolean).join(' – ')).join(' / ');
+const noReg=x=>x.e==='ocupada';
+function coincide(x,q){if(/^\d+$/.test(q)&&x.n===+q)return true;
+  return [x.ip,x.host,x.mac,x.nota,x.por,invTxt(x)].some(v=>v&&!/^\d+$/.test(q)&&sinTilde(v).includes(sinTilde(q)))}
+
+/* ---------------- Alertas ---------------- */
+const eqTxt=e=>e.inv?esc(e.host):`${esc(e.host||'PC sin nombre')} <span class="mono">(${esc(e.mac)})</span>`;
+function textoAlerta(a){
+  if(a.tipo==='inventario')return `<b>⚠ IP repetida en el inventario: ${esc(a.ip)}</b><div>Está asignada a ${a.equipos.length} equipos. Toca Corregir y elige a cuál darle una IP libre.</div>`;
+  return a.tipo==='duplicada'
+    ?`<b>⚠ Dos equipos usan la ${esc(a.ip)}</b><div>La IP alterna entre ${a.equipos.length} equipos distintos (${a.veces} veces, la última ${hace(a.ts)}). Toca Corregir para darle una IP libre a uno.</div>`
+    :`<b>La IP ${esc(a.ip)} cambió de equipo</b><div>Si no la reasignaste tú, otra PC podría estar usándola (${hace(a.ts)}).</div>`;
+}
+function renderAlertas(){
+  const L=D.alertas||[];
+  document.title=(L.length?'(⚠ '+L.length+') ':'')+'IP Libres · UGEL';
+  const lista=L.map(a=>`<div class="al ${a.tipo}">${textoAlerta(a)}
+    ${a.equipos.map(e=>`<div class="eq">• ${eqTxt(e)}</div>`).join('')}
+    <div class="acciones"><button type="button" data-ip="${esc(a.ip)}">Ver IP</button><button type="button" class="pri" data-reasignar="${esc(a.id)}">Corregir</button><button type="button" data-revisar="${esc(a.id)}">Ignorar</button></div></div>`).join('');
+  $('#alertas').innerHTML=L.length<2?lista:`<button type="button" class="al resumen" id="alToggle"><b>⚠ ${L.length} conflictos de IP por corregir</b> <span>${alAbiertas?'▲ Ocultar':'▼ Ver'}</span></button>${alAbiertas?lista:''}`;
+}
+
+/* ---------------- Vista Red (rack 3D) ---------------- */
+const VACIO_SVG=`<svg viewBox="0 0 64 64" aria-hidden="true"><path fill="#E8EDF2" d="M32 6l26 13-26 13L6 19z"/><path fill="#96A3B1" d="M6 19l26 13v22L6 41z"/><path fill="#C6CFD9" d="M32 32l26-13v22L32 54z"/><circle cx="37" cy="40" r="1.8" fill="#16B876"/><circle cx="43" cy="37" r="1.8" fill="#F2A21B"/><circle cx="49" cy="34" r="1.8" fill="#16B876"/></svg>`;
+function faltan(t){const m=Math.round((t-(Date.now()+off))/60000);return m<1?'menos de 1 min':m+' min'}
+const puerto=(x,m)=>`<button type="button" class="port p-${x.e}${x.e==='asignada'&&x.on?' on':''}${x.dhcpEn?' dhcpon':''}${x.alerta?' alarma':''}${m?'':' dim'}" data-ip="${x.ip}" aria-label="${x.ip}, ${NOM1[x.e]}${x.on?', encendida':''}${x.dhcpEn?', encendida por DHCP en la '+x.dhcpEn:''}${x.inv?', '+esc(invTxt(x)):''}${x.de?', '+esc(x.de.nombre):''}">${x.n}</button>`;
+function render(){
+  if(!D)return;
+  renderAlertas();
+  const ahora=Date.now()+off;
+  $('#hora').textContent=D.escaneando?'Escaneando la red…':D.ultimoEscaneo?`Escaneado ${hace(D.ultimoEscaneo)}${D.proximo?', próximo en '+faltan(D.proximo):''}`:'Aún sin escanear';
+  const b=$('#btnScan');b.disabled=D.escaneando;b.classList.toggle('girando',!!D.escaneando);
+  const p=D.escaneando?1:(D.ultimoEscaneo&&D.proximo?Math.min(1,Math.max(0,(ahora-D.ultimoEscaneo)/(D.proximo-D.ultimoEscaneo))):0);
+  b.style.setProperty('--p',p.toFixed(3));
+  if(VISTA!=='red')return;
+  $('#tabs').innerHTML=D.segmentos.map((s,i)=>`<button type="button" class="${i===seg?'on':''}" data-seg="${i}" aria-pressed="${i===seg}">${esc(s.nombre)}<small>${esc(s.red)}</small></button>`).join('');
+  const S=D.segmentos[seg],c={asignada:0,libre:0,ocupada:0,ausente:0,dhcp:0};
+  S.ips.forEach(x=>c[x.e]++);
+  $('#chips').innerHTML=Object.keys(c).map(k=>`<button type="button" class="led k-${k}${filtro===k?' on':''}" data-f="${k}" aria-pressed="${filtro===k}"><i></i><b>${c[k]}</b><span>${NOM[k]}</span></button>`).join('');
+  const on=S.ips.filter(x=>x.e==='asignada'&&(x.on||x.dhcpEn)).length,nd=S.ips.filter(x=>x.dhcpEn).length,mov=S.ips.filter(x=>x.e==='ocupada'&&x.movil).length;
+  $('#noreg').innerHTML=`<p class="mut" style="margin:0 0 10px">${c.asignada} IPs asignadas en el inventario, ${on} encendidas ahora${nd?` (${nd} con otra IP que les dio el DHCP)`:''}.${c.ocupada?` Hay ${c.ocupada} equipos encendidos que no están en el inventario${mov?` (${mov} son celulares o laptops del Wi-Fi)`:''}: tócalos en rojo para registrarlos.`:''}</p>`;
+  const L=libres(S);let h;
+  if(!D.ultimoEscaneo)h=`<div class="vacio">${VACIO_SVG}<div>Escaneando la red por primera vez. Tarda menos de un minuto.</div></div>`;
+  else if(!L.length)h=`<div class="vacio">${VACIO_SVG}<div>No quedan IPs libres desde la .${S.sugerirDesde} en este segmento. Revisa las ausentes con Informática.</div></div>`;
+  else{const i=sugIdx%L.length,x=L[i];
+    h=`<div class="tape"><span class="tape-t">IP libre sugerida</span><span class="tape-ip">${x.ip}</span></div>
+    <div class="tape-acc"><button type="button" data-copiar="${x.ip}">Copiar</button><button type="button" id="otra">Otra</button><button type="button" class="pri" data-nueva-ip="${x.ip}">Asignar</button></div>
+    <p class="mut">Opción ${i+1} de ${L.length}. Primero salen las que nunca se han visto encendidas.</p>`}
+  $('#sug').innerHTML=h;
+  const q=$('#q').value.trim().toLowerCase();
+  const U=[];for(let i=0;i<S.ips.length;i+=24)U.push(S.ips.slice(i,i+24));
+  const rack=$('#rack');
+  rack.innerHTML=U.map((u,k)=>`<div class="unidad" style="--i:${k}"><div class="oreja"><span>${u[0].n}–${u[u.length-1].n}</span></div><div class="puertos">${
+    u.map(x=>puerto(x,(!filtro||(filtro==='noreg'?noReg(x):x.e===filtro))&&(!q||coincide(x,q)))).join('')}</div><div class="oreja"></div></div>`).join('');
+  if(!rackListo){rackListo=true;setTimeout(()=>rack.classList.add('listo'),U.length*55+700)}
+  $('#leyenda').innerHTML=`<p><b class="k-asignada"><i></i>Asignada</b> está en el inventario (Drive + Packet Tracer). El punto verde indica que está encendida ahora; el celeste, que el equipo está encendido pero con otra IP (DHCP).</p>
+    <p><b class="k-libre"><i></i>Libre</b> no está en el inventario y no se ha visto en ${D.diasAusente} días. Se puede asignar.</p>
+    <p><b class="k-ocupada"><i></i>Sin registrar</b> hay un equipo encendido con esta IP que no está en el inventario. Tócala para registrarlo.</p>
+    <p><b class="k-dhcp"><i></i>Por DHCP</b> un equipo del inventario está usando esta IP porque el DHCP se la dio. En su IP asignada se ve un punto celeste.</p>
+    <p><b class="k-ausente"><i></i>Ausente</b> no está en el inventario, pero se vio en los últimos ${D.diasAusente} días. No la asignes hasta saber de quién es.</p>
+    <p><b>Borde amarillo parpadeando</b> conflicto: dos equipos usan la misma IP o está repetida en el inventario.</p>`;
+  if(abierta)info(abierta);
+}
+const buscar=ip=>IPMAP[ip];
+function info(ip){
+  const x=buscar(ip);if(!x)return;
+  let a='';
+  if(x.e==='ausente')a=`<p class="alerta">No está en el inventario, pero se vio encendida ${hace(x.visto)}. Puede ser una PC apagada: no la asignes hasta confirmar.</p>`;
+  if(x.dhcpEn)a=`<p class="alerta" style="background:var(--dhcp-bg);color:var(--ink)">El equipo está <b>encendido por DHCP con la ${esc(x.dhcpEn)}</b>, no con esta IP. Fija su IP en Windows o actualiza la ficha.</p>`;
+  if(x.de)a=`<p class="alerta" style="background:var(--dhcp-bg);color:var(--ink)">Es <b>${esc([x.de.area,x.de.nombre].filter(Boolean).join(' – '))}</b>, ${x.de.ip?'que en el inventario tiene la '+esc(x.de.ip):'que en el inventario no tiene IP fija'}. Está usando esta IP porque se la dio el DHCP.</p>`;
+  if(x.e==='ocupada')a=`<p class="alerta">Hay un equipo encendido con esta IP que no está en el inventario${x.movil?'. Por su MAC privada, parece un celular o una laptop del Wi-Fi':''}.</p>`;
+  const al=(D.alertas||[]).find(z=>z.ip===ip);
+  if(al)a+=`<div class="al ${al.tipo}" style="margin-bottom:12px">${textoAlerta(al)}${al.equipos.map(e=>`<div class="eq">• ${eqTxt(e)}</div>`).join('')}</div>`;
+  const visto=x.on?'Encendido ahora'+(x.via==='arp'?' (por ARP, bloquea ping)':''):hace(x.visto);
+  let f=[['Estado',`<span class="badge c-${x.e}">${NOM1[x.e]}</span>`],
+    ['Inventario',x.inv?x.inv.map(e=>`${ICON[e.tipo]||''} ${esc([e.area,e.nombre].filter(Boolean).join(' – '))}`+(e.switch?`<br><span class="mut">${esc(e.switch)}${e.puerto?', '+esc(e.puerto):''}</span>`:'')).join('<br>'):'<span class="mut">No está en el inventario</span>'],
+    ['Nombre en red',esc(x.host||'—')],['MAC',`<span class="mono">${esc(x.mac||'—')}</span>`],['Visto',esc(visto)]];
+  if(x.dh){const h=x.dh,hs=esc(h.host||h.mac||'—');
+    f.push(['Servidor DHCP',h.est==='reserva'?`Reservada para <b>${hs}</b> ✓`:h.est==='reservaInactiva'?`Reservada para <b>${hs}</b> (apagado)`:h.est==='rechazada'?'<span style="color:var(--activa)">Rechazada: el DHCP intentó prestarla y otro equipo con IP fija ya la usaba</span>':`Prestada a <b>${hs}</b>${h.vence?' hasta '+esc(h.vence):''}`]);}
+  if(x.dhcpEn){const q=(x.inv||[]).map(e=>EQR[e.id]).find(q=>q&&q.dhcp),y=IPMAP[x.dhcpEn]||{};
+    f.splice(2,3,['Nombre en red',esc(y.host||'—')],['MAC de su PC',`<span class="mono">${esc(q?q.mac:'—')}</span>`],['Visto',`Encendido ahora con la <b>${esc(x.dhcpEn)}</b> (DHCP)`]);
+    if(x.mac&&q&&x.mac!==q.mac)f.push(['Último en esta IP',`<span class="mono">${esc(x.mac)}</span>, ${esc(hace(x.visto))}`]);}
+  if(x.nota)f.push(['Nota',esc(x.nota)]);
+  $('#sInfo').innerHTML=a+'<dl>'+f.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')+'</dl>';
+}
+function abrir(ip){
+  const x=buscar(ip);if(!x)return;
+  abierta=ip;FICHA=null;$('#sIp').textContent=ip;info(ip);
+  const fichas=(x.de?[{id:x.de.id,nombre:x.de.nombre}]:[]).concat(x.inv||[]).map(e=>`<button type="button" class="btn" data-ficha="${esc(e.id)}">✏️ Editar ficha de ${esc(e.nombre)}</button>`).join('');
+  const vinc=!fichas&&x.on&&x.mac?`<button type="button" class="btn pri" data-vincular="${ip}">🔗 Es un equipo del inventario (por DHCP)</button>`:'';
+  $('#sForm').innerHTML=`<div class="inv-btns">${vinc}${fichas||`<button type="button" class="btn pri" data-nueva-ip="${ip}" data-host="${esc(x.host||'')}">+ ${x.e==='libre'?'Asignar esta IP a un equipo':'Registrar en el inventario'}</button>`}
+    <button type="button" class="btn" data-copiar="${ip}">Copiar IP</button></div>`;
+  abrirHoja();
+}
+function abrirHoja(){$('#velo').hidden=$('#sheet').hidden=false}
+function cerrar(){abierta=null;FICHA=null;RS=null;$('#velo').hidden=$('#sheet').hidden=true}
+
+/* ---------------- Vista Inventario ---------------- */
+function setVista(v){
+  VISTA=v;ls.set('vista',v);
+  $('#vRed').hidden=v!=='red';$('#vInv').hidden=v!=='inv';
+  $('#dRed').classList.toggle('on',v==='red');$('#dInv').classList.toggle('on',v==='inv');
+  window.scrollTo(0,0);
+  if(v==='inv')cargarInv();else render();
+}
+async function cargarInv(){
+  try{const j=await api('/api/inventario');INVL=j;invVerCargada=j.version;renderInv()}
+  catch(e){$('#invSub').textContent='No se pudo cargar el inventario: '+e.message}
+}
+const enDhcp=e=>{const q=e&&EQR[e.id];return q&&q.dhcp&&!(IPMAP[e.ip]&&IPMAP[e.ip].on)?q.ipActual:''};
+const encendido=e=>!!(IPMAP[e.ip]&&IPMAP[e.ip].on)||!!enDhcp(e);
+const ledDe=(ip,e)=>{const x=IPMAP[ip];return x&&x.on?'#16B876':enDhcp(e)?'var(--dhcp)':'var(--line)'};
+const estadoTxt=(ip,e)=>{const x=IPMAP[ip],d=enDhcp(e);if(d)return'Encendido por DHCP con la '+d;if(!x)return'Fuera de los segmentos escaneados';return x.on?'Encendido ahora':x.visto?'Apagado, visto '+hace(x.visto):'Nunca se ha visto encendido'};
+function filtrar(L){
+  const q=sinTilde($('#iq').value.trim());
+  return L.filter(e=>{
+    if(invFiltro==='revisar'&&!(e.revisar&&e.revisar.length))return false;
+    if(invFiltro==='sinip'&&(e.ip||e.tipo==='Switch'))return false;
+    if(invFiltro==='enuso'&&!encendido(e))return false;
+    if(invFiltro==='dhcp'&&!enDhcp(e))return false;
+    if(invFiltro==='macver'&&!(e.mac&&e.macAuto))return false;
+    if(!['todos','revisar','sinip','enuso','dhcp','macver'].includes(invFiltro)&&e.tipo!==invFiltro)return false;
+    if(!q)return true;
+    if(/^\d+$/.test(q))return e.ip&&(e.ip.endsWith('.'+q)||e.ip.split('.').pop().startsWith(q));
+    return [e.nombre,e.area,e.ip,e.switch,e.puerto,e.notas,e.tipo,e.nombrePT].some(v=>v&&sinTilde(v).includes(q));
+  });
+}
+function renderInv(){
+  if(!INVL)return;
+  const L=INVL.equipos,rev=L.filter(e=>e.revisar&&e.revisar.length).length,sin=L.filter(e=>!e.ip&&e.tipo!=='Switch').length;
+  const enuso=L.filter(encendido).length,ndhcp=L.filter(e=>enDhcp(e)).length;
+  $('#invSub').textContent=`${L.length} equipos registrados. ${enuso} encendidos ahora${ndhcp?` (${ndhcp} con otra IP por DHCP)`:''}${rev?`, ${rev} por revisar`:''}.`;
+  const cuenta=t=>L.filter(e=>e.tipo===t).length;
+  const tipos=INVL.tipos.filter(cuenta);
+  const F=[['todos','Todos',L.length],...(rev?[['revisar','⚠ Por revisar',rev]]:[]),['enuso','Encendidos',enuso],...(ndhcp?[['dhcp','📡 Por DHCP',ndhcp]]:[]),...(L.some(e=>e.mac&&e.macAuto)?[['macver','🔎 MAC por verificar',L.filter(e=>e.mac&&e.macAuto).length]]:[]),...(sin?[['sinip','Sin IP',sin]]:[]),...tipos.map(t=>[t,(ICON[t]||'')+' '+t,cuenta(t)])];
+  $('#invFiltros').innerHTML=F.map(([k,n,c])=>`<button type="button" class="filtro${invFiltro===k?' on':''}${k==='revisar'?' aviso-f':''}" data-if="${esc(k)}">${esc(n)}<small>${c}</small></button>`).join('');
+  const V=filtrar(L);
+  const G={};V.forEach(e=>{const a=e.area||'Sin área';(G[a]=G[a]||[]).push(e)});
+  const areas=Object.keys(G).sort((a,b)=>(a==='Sin área')-(b==='Sin área')||a.localeCompare(b,'es'));
+  $('#invLista').innerHTML=V.length?areas.map(a=>`<div class="grupo"><h3>${esc(a)}<span>${G[a].length}</span></h3><div class="lista">${
+    G[a].sort((x,y)=>ipNum(x.ip)-ipNum(y.ip)||x.nombre.localeCompare(y.nombre,'es')).map(fichaHtml).join('')}</div></div>`).join('')
+    :`<div class="vacio-inv">No hay equipos con ese filtro o búsqueda.</div>`;
+  $('#invHerr').innerHTML=`${D&&D.inventario&&D.inventario.sheet?'<button type="button" class="btn" id="bImportar">⬇️ Importar del Google Sheet</button>':''}
+    <a class="btn" href="/api/inventario/exportar.csv" download>📄 Descargar en Excel (CSV)</a>
+    ${D&&D.dhcp?`<a class="btn" href="/api/dhcp/reservas.ps1" download title="Comandos para reservar en el servidor DHCP la IP de cada equipo con MAC conocida">🛡️ Reservas DHCP (PowerShell)</a>`:''}`;
+  if(D&&D.dhcp)$('#invHerr').insertAdjacentHTML('beforeend',`<p class="mut" style="width:100%;font-size:13px;margin:4px 2px 0">DHCP del servidor: reparte ${esc(D.dhcp.inicio)} a ${esc(D.dhcp.fin)}, préstamo de ${esc(durTxt(D.dhcp.duracion))}. Actualizado ${esc(hace(D.dhcp.ts))}.</p>`);
+}
+function fichaHtml(e){
+  const dup=e.ip&&INVL.equipos.filter(x=>x.ip===e.ip).length>1;
+  const det=[e.tipo,e.switch&&(e.switch+(e.puerto?', '+e.puerto:''))].filter(Boolean).join('. ');
+  return `<button type="button" class="ficha" data-ficha="${esc(e.id)}">
+    <span class="ico" aria-hidden="true">${ICON[e.tipo]||'📦'}</span>
+    <span><b>${esc(e.nombre)}</b><span class="det">${esc(det)}</span>${dup?'<span class="flag rojo">IP repetida</span>':''}${e.revisar&&e.revisar.length?'<span class="flag">Por revisar</span>':''}${enDhcp(e)?`<span class="flag dhcp">DHCP → ${esc(enDhcp(e))}</span>`:''}</span>
+    ${e.ip?`<span class="ipc" style="--c:${ledDe(e.ip,e)}" title="${esc(estadoTxt(e.ip,e))}"><i></i>${esc(e.ip)}</span>`:(e.tipo==='Switch'?'':enDhcp(e)?`<span class="ipc" style="--c:var(--dhcp)" title="${esc(estadoTxt('',e))}"><i></i>DHCP</span>`:'<span class="ipc sin">Sin IP</span>')}
+  </button>`;
+}
+
+/* ---------------- Formulario de ficha ---------------- */
+async function abrirFicha(id,preset){
+  if(!INVL)await cargarInv();
+  const e=id?INVL.equipos.find(x=>x.id===id):Object.assign({ip:'',area:'',nombre:'',tipo:'PC',switch:'',puerto:'',notas:''},preset||{});
+  if(!e)return toast('Esa ficha ya no existe');
+  FICHA=e;abierta=null;borrarArmado=false;
+  $('#sIp').textContent=id?'Editar equipo':'Nuevo equipo';
+  const areas=[...new Set(INVL.equipos.map(x=>x.area).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  const sws=[...new Set(INVL.equipos.map(x=>x.switch).filter(Boolean))].sort();
+  const hist=id?INVL.historial.filter(h=>h.id===id).slice(-6).reverse():[];
+  const dups=e.ip?INVL.equipos.filter(x=>x.ip===e.ip&&x.id!==e.id):[];
+  const q=id&&EQR[id],dh=id&&enDhcp(e);
+  const dhcpBox=dh?`<div class="revbox" style="background:var(--dhcp-bg)"><b>📡 Encendido por DHCP con la ${esc(dh)}</b>
+    <div>La MAC de este equipo está respondiendo en la ${esc(dh)}, no en la ${esc(e.ip||'IP de la ficha')}. Para ordenar: fija la IP en Windows, o guarda en la ficha la que usa ahora.</div>
+    <div class="acciones" style="margin-top:8px"><button type="button" class="pri" id="fFijar" data-fijar="${esc(dh)}">Fijar la ${esc(dh)} en esta ficha</button></div></div>`:'';
+  $('#sInfo').innerHTML=dhcpBox+(dups.length?`<div class="al" style="margin-bottom:10px"><b>⚠ La ${esc(e.ip)} también es de ${esc(dups.map(x=>[x.area,x.nombre].filter(Boolean).join(' – ')).join(', '))}</b>
+    <div>Toca «Usar una libre» para darle a este equipo una IP libre y guarda.</div></div>`:'')+(e.revisar&&e.revisar.length?`<div class="revbox"><b>Por revisar</b><ul>${e.revisar.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>
+    <label class="check"><input type="checkbox" id="fRev"> Ya lo revisé, quitar este aviso al guardar</label></div>`:'');
+  $('#sForm').innerHTML=`
+    <label>Funcionario o equipo<input id="fNom" maxlength="80" value="${esc(e.nombre)}" placeholder="Ej. Karla Barrios o Impresora de Caja" autocomplete="off"></label>
+    <div class="dos">
+      <label>Área<input id="fArea" list="lAreas" maxlength="60" value="${esc(e.area)}" placeholder="Ej. AGP" autocomplete="off"></label>
+      <label>Tipo<select id="fTipo">${INVL.tipos.map(t=>`<option${t===e.tipo?' selected':''}>${esc(t)}</option>`).join('')}</select></label>
+    </div>
+    <label>IP<div class="ipline"><input id="fIp" inputmode="decimal" maxlength="15" value="${esc(e.ip)}" placeholder="172.16.14.___" autocomplete="off"><button type="button" class="btn" id="fLibre">Usar una libre</button></div></label>
+    <div class="ipest" id="fIpEst"></div>
+    <label>MAC de la tarjeta de red<input id="fMac" maxlength="17" value="${esc(e.mac||'')}" placeholder="Ej. 80:b6:55:b6:69:4e" autocomplete="off" spellcheck="false" style="font-family:var(--f-num)"></label>
+    ${e.mac?'':`<select id="fMacSel" style="margin-top:6px"><option value="">¿Está encendida con otra IP? Elígela aquí</option>${Object.values(IPMAP).filter(x=>x.e==='ocupada'&&x.on&&x.mac).sort((a,b)=>(!!a.movil-!!b.movil)||ipNum(a.ip)-ipNum(b.ip)).map(x=>`<option value="${esc(x.mac)}">${esc(x.ip)} · ${esc(x.host||'sin nombre')}${x.movil?' (Wi-Fi)':''}</option>`).join('')}</select>`}
+    <div class="ipest">${e.mac?(e.macAuto?`<div class="revbox" style="margin:2px 0 6px">🔎 <b>MAC aprendida sola, sin verificar.</b>${q&&q.hosts&&q.hosts.length?` Esa tarjeta de red se llama <b>${q.hosts.map(esc).join(', ')}</b> en la red.`:''} ¿Es de este equipo?
+      <div class="acciones" style="margin-top:8px;display:flex;gap:8px"><button type="button" class="pri" id="macSi">✓ Sí, es de este equipo</button><button type="button" class="btn" id="macNo">✗ No es</button></div></div>`:'Confirmada.'):'Se aprende sola cuando el equipo se enciende con su IP. Sirve para reconocerlo aunque el DHCP le dé otra IP.'}${q&&q.ips&&q.ips.length?`<br>IPs donde se ha visto: ${q.ips.map(z=>esc(z.ip.split('.').slice(-2).join('.'))+(z.ip===q.ipActual?' (ahora)':'')).join(', ')}`:''}</div>
+    <div class="dos">
+      <label>Switch<input id="fSw" list="lSw" maxlength="60" value="${esc(e.switch)}" autocomplete="off"></label>
+      <label>Puerto<input id="fPto" maxlength="20" value="${esc(e.puerto)}" placeholder="Ej. Fa0/12" autocomplete="off"></label>
+    </div>
+    <label>Notas<textarea id="fNotas" maxlength="300">${esc(e.notas)}</textarea></label>
+    <label>Tu nombre<input id="fPor" maxlength="40" value="${esc(ls.get('por')||'')}" placeholder="Para el historial de cambios" autocomplete="off"></label>
+    <datalist id="lAreas">${areas.map(a=>`<option value="${esc(a)}">`).join('')}</datalist>
+    <datalist id="lSw">${sws.map(a=>`<option value="${esc(a)}">`).join('')}</datalist>
+    <div class="acciones">${id?'<button type="button" class="peligro" id="fBorrar">Borrar</button>':''}<button type="button" id="fCancelar">Cancelar</button><button type="button" class="pri" id="fGuardar">Guardar</button></div>
+    ${id?`<div class="meta">${e.nombrePT?`En el Packet Tracer se llama «${esc(e.nombrePT)}». `:''}Origen: ${esc((e.origen||[]).join(', ')||'—')}. Última edición ${hace(e.editado)}${e.por?' por '+esc(e.por):''}.</div>
+      ${hist.length?`<ul class="hist">${hist.map(h=>`<li>${hace(h.ts)}${h.por?', '+esc(h.por):''}: ${esc(textoHist(h))}</li>`).join('')}</ul>`:''}`:''}`;
+  $('#fIp').addEventListener('input',validarIp);validarIp();
+  const mv=ok=>conPin(()=>api('/api/inventario/mac',{id,ok,por:ls.get('por')||''})).then(async r=>{if(!r)return;toast(ok?'MAC confirmada':'MAC descartada: la app buscará otra');
+    await cargarInv();cargar();const sig=invFiltro==='macver'&&INVL.equipos.find(z=>z.mac&&z.macAuto&&z.id!==id);sig?abrirFicha(sig.id):cerrar();});
+  if($('#macSi')){$('#macSi').onclick=()=>mv(true);$('#macNo').onclick=()=>mv(false);}
+  const ms=$('#fMacSel');if(ms)ms.onchange=()=>{$('#fMac').value=ms.value;if(ms.value)toast('MAC puesta en la ficha. Toca Guardar')};
+  const fj=$('#fFijar');if(fj)fj.onclick=()=>{$('#fIp').value=fj.dataset.fijar;validarIp();$('#fIp').scrollIntoView({block:'center',behavior:'smooth'});toast('IP puesta en la ficha. Toca Guardar')};
+  abrirHoja();
+  if(!id)setTimeout(()=>$('#fNom').focus(),50);
+}
+const CAMPO={mac:'MAC',ip:'IP',area:'área',nombre:'nombre',tipo:'tipo',switch:'switch',puerto:'puerto',notas:'notas',revisado:'aviso'};
+function textoHist(h){
+  if(h.accion==='crear')return 'Creó la ficha';
+  if(h.accion==='borrar')return 'Borró la ficha';
+  if(h.accion==='importar')return 'Actualizado desde el Google Sheet';
+  if(h.accion==='reasignar'&&h.cambios&&h.cambios.ip)return `Reasignó la IP de ${h.cambios.ip[0]||'—'} a ${h.cambios.ip[1]}`;
+  if(h.cambios)return Object.entries(h.cambios).map(([k,[a,b]])=>k==='revisado'?'Marcó como revisado':`${CAMPO[k]||k}: «${a||'—'}» → «${b||'—'}»`).join('; ');
+  return h.accion;
+}
+function validarIp(){
+  const ip=$('#fIp').value.trim(),o=$('#fIpEst');o.className='ipest';
+  if(!ip){o.textContent=FICHA&&EQR[FICHA.id]&&EQR[FICHA.id].ipActual?'Sin IP fija: trabaja por DHCP, ahora con la '+EQR[FICHA.id].ipActual+'.':'Sin IP fija: si trabaja por DHCP, la app lo reconoce por su MAC (escríbela abajo o vincúlalo desde su IP en la red).';return}
+  if(!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(ip)){o.textContent='Escribe la IP completa, por ejemplo 172.16.14.25';o.classList.add('ojo');return}
+  const otro=INVL.equipos.find(x=>x.ip===ip&&(!FICHA||x.id!==FICHA.id));
+  if(otro&&FICHA&&FICHA.ip===ip){o.textContent=`Repetida con ${[otro.area,otro.nombre].filter(Boolean).join(' – ')}. Cámbiala por una libre.`;o.classList.add('mal');return}
+  if(otro){o.textContent=`Ya es de ${[otro.area,otro.nombre].filter(Boolean).join(' – ')}. No se puede repetir.`;o.classList.add('mal');return}
+  const x=IPMAP[ip],mia=FICHA&&FICHA.ip===ip;
+  if(!x){o.textContent='Esta IP está fuera de los segmentos que escanea la app.';o.classList.add('ojo');return}
+  if(x.de&&FICHA&&x.de.id===FICHA.id&&!mia){o.textContent='Es la IP que este equipo usa ahora por DHCP ✓. Guarda y fíjala también en Windows.';o.classList.add('ok');return}
+  if(x.on&&!mia){o.textContent=`Ojo: ahora hay un equipo encendido con esta IP${x.host?' ('+x.host+')':''}.`;o.classList.add('ojo');return}
+  if(x.e==='ausente'&&!mia){o.textContent=`Ojo: se vio encendida ${hace(x.visto)}. Puede ser una PC apagada.`;o.classList.add('ojo');return}
+  o.textContent=mia?estadoTxt(ip,FICHA)+'.':'Libre ✓';o.classList.add('ok');
+}
+let libreIdx=0;
+function usarLibre(){
+  const cur=$('#fIp').value.trim();
+  const S=D.segmentos.find(s=>cur.startsWith(s.red+'.'))||D.segmentos[seg]||D.segmentos[0];
+  const L=libres(S).filter(x=>!INVL.equipos.some(e=>e.ip===x.ip));
+  if(!L.length)return toast('No quedan IPs libres en '+S.nombre);
+  $('#fIp').value=L[libreIdx++%L.length].ip;validarIp();
+}
+async function guardarFicha(){
+  const nombre=$('#fNom').value.trim();
+  if(!nombre){$('#fNom').focus();return toast('Escribe el nombre del funcionario o del equipo')}
+  const por=$('#fPor').value.trim();ls.set('por',por);
+  const body={id:FICHA&&FICHA.id,nombre,area:$('#fArea').value,tipo:$('#fTipo').value,ip:$('#fIp').value.trim(),switch:$('#fSw').value,puerto:$('#fPto').value,notas:$('#fNotas').value,mac:$('#fMac').value.trim(),revisado:!!($('#fRev')&&$('#fRev').checked),por};
+  const r=await conPin(()=>api('/api/inventario/guardar',body));
+  if(!r)return;
+  toast(body.id?'Ficha guardada':'Equipo agregado al inventario');cerrar();await cargarInv();cargar();
+}
+async function borrarFicha(){
+  const b=$('#fBorrar');
+  if(!borrarArmado){borrarArmado=true;b.textContent='¿Borrar? Toca otra vez';return}
+  const r=await conPin(()=>api('/api/inventario/borrar',{id:FICHA.id,por:$('#fPor').value.trim()}));
+  if(!r)return;
+  toast('Ficha borrada');cerrar();await cargarInv();cargar();
+}
+async function importar(){
+  const b=$('#bImportar');b.disabled=true;b.textContent='Importando…';
+  const r=await conPin(()=>api('/api/inventario/importar',{por:ls.get('por')||''}));
+  b.disabled=false;b.textContent='⬇️ Importar del Google Sheet';
+  if(!r)return;
+  toast(`Google Sheet importado: ${r.nuevos} nuevos, ${r.actualizados} actualizados${r.protegidos?`, ${r.protegidos} sin tocar porque se editaron en la app`:''}`);
+  await cargarInv();cargar();
+}
+
+/* ---------------- Vincular una IP de DHCP con su ficha ---------------- */
+let VINC=null;
+async function vincular(ip){
+  if(!INVL)await cargarInv();
+  const x=IPMAP[ip];if(!x)return;
+  VINC={ip,mac:x.mac,host:x.host};abierta=null;FICHA=null;
+  $('#sIp').textContent='¿De quién es la '+ip+'?';
+  $('#sInfo').innerHTML=`<p class="mut" style="margin-top:0">Elige la ficha de este equipo${x.host?` (<b>${esc(x.host)}</b>)`:''}. Se guarda su MAC <span class="mono">${esc(x.mac)}</span> y desde ahí la app lo reconoce aunque el DHCP le cambie la IP.${x.movil?' Ojo: es una MAC privada (celular o laptop por Wi-Fi), puede cambiar.':''}</p>`;
+  $('#sForm').innerHTML=`<input id="vq" placeholder="Busca nombre, área o IP" autocomplete="off"><p class="mut" style="font-size:13px;margin:8px 2px">Primero salen las fichas que se ven apagadas.</p><div id="vLista"></div>`;
+  const pintar=()=>{const q=sinTilde($('#vq').value.trim());
+    const L=INVL.equipos.filter(e=>e.tipo!=='Switch'&&e.tipo!=='Router'&&(!q||[e.nombre,e.area,e.ip].some(v=>v&&sinTilde(v).includes(q))))
+      .sort((a,b)=>encendido(a)-encendido(b)||(a.area||'').localeCompare(b.area||'','es')).slice(0,40);
+    $('#vLista').innerHTML=L.map(e=>`<button type="button" class="ficha" data-vinc="${esc(e.id)}"><span class="ico" aria-hidden="true">${ICON[e.tipo]||'📦'}</span>
+      <span><b>${esc(e.nombre)}</b><span class="det">${esc([e.area,e.tipo].filter(Boolean).join('. '))}</span></span>
+      ${e.ip?`<span class="ipc" style="--c:${ledDe(e.ip,e)}"><i></i>${esc(e.ip.split('.').slice(-2).join('.'))}</span>`:'<span class="ipc sin">Sin IP</span>'}</button>`).join('')||'<div class="vacio-inv">No hay fichas con esa búsqueda.</div>';};
+  $('#vq').addEventListener('input',pintar);pintar();
+  abrirHoja();
+}
+async function confirmarVinculo(id){
+  const e=INVL.equipos.find(z=>z.id===id);if(!e||!VINC)return;
+  const r=await conPin(()=>api('/api/inventario/guardar',{id:e.id,nombre:e.nombre,area:e.area,tipo:e.tipo,ip:e.ip||'',switch:e.switch||'',puerto:e.puerto||'',notas:e.notas||'',mac:VINC.mac,por:ls.get('por')||''}));
+  if(!r)return;
+  toast(`Listo: la ${VINC.ip} es ${e.nombre}. Ahora sale encendido por DHCP`);VINC=null;cerrar();await cargarInv();cargar();
+}
+
+/* ---------------- Reasignar ---------------- */
+const quienDe=e=>e.inv?e.host:`${e.host||'PC sin nombre'} (${e.mac})`;
+function reasignar(id){
+  const a=(D.alertas||[]).find(z=>z.id===id);if(!a)return;
+  const S=D.segmentos.find(s=>a.ip.startsWith(s.red+'.'));const L=S?libres(S):[];
+  if(!L.length)return toast('No hay IPs libres en este segmento');
+  RS={a,L,i:0};abierta=null;FICHA=null;
+  $('#sIp').textContent='Corregir '+a.ip;
+  $('#sInfo').innerHTML=`<p class="mut" style="margin-top:0">¿Qué equipo se mueve a una IP libre? El otro se queda con la ${esc(a.ip)}.</p>`+
+    a.equipos.map((e,i)=>`<label class="check" style="margin:10px 0"><input type="radio" name="rq" value="${i}"${a.tipo!=='inventario'&&i===a.equipos.length-1?' checked':''}> <span>${eqTxt(e)}</span></label>`).join('');
+  $('#sForm').innerHTML=`<label>Nueva IP (libre sugerida)<div class="ipline"><input id="rNueva" value="${L[0].ip}" inputmode="decimal"><button type="button" class="btn" id="rOtra">Otra</button></div></label>
+    <label>Tu nombre<input id="fPor" maxlength="40" value="${esc(ls.get('por')||'')}"></label>
+    <div class="acciones"><button type="button" id="rCancelar">Cancelar</button><button type="button" class="pri" id="rOk">Mover a esa IP</button></div>`;
+  abrirHoja();
+}
+async function confirmarReasignar(){
+  const sel=document.querySelector('input[name="rq"]:checked');
+  if(!sel)return toast('Elige qué equipo se cambia de IP');
+  const e=RS.a.equipos[+sel.value],quien=quienDe(e),nueva=$('#rNueva').value.trim(),por=$('#fPor').value.trim();
+  ls.set('por',por);
+  const r=await conPin(()=>api('/api/reasignar',{ip:RS.a.ip,nueva,quien,alerta:RS.a.id,equipoId:e.id,por}));
+  if(!r)return;
+  const cmd=`netsh interface ipv4 set address name="Ethernet" static ${r.nueva} ${r.mascara} ${r.gateway}`;
+  $('#sIp').textContent='Listo ✓';
+  $('#sInfo').innerHTML=`<p style="margin-top:0"><b>${esc(quien)}</b> pasa a la IP <b class="mono">${esc(r.nueva)}</b>. ${e.id?'El inventario ya quedó actualizado.':'La IP quedó apartada en la app.'}</p>
+    <p class="mut">En esa PC abre CMD como administrador y ejecuta:</p><pre class="cmd">${esc(cmd)}</pre>
+    <p class="mut">Si la tarjeta de red no se llama "Ethernet", mira su nombre con <span class="mono">netsh interface show interface</span>.</p>`;
+  $('#sForm').innerHTML=`<div class="acciones"><button type="button" data-copiar="${esc(cmd)}">Copiar comando</button><button type="button" class="pri" id="rCerrar">Cerrar</button></div>`;
+  RS=null;if(INVL)cargarInv();cargar();
+}
+async function revisar(id){
+  const r=await conPin(()=>api('/api/alerta/revisar',{id,por:ls.get('por')||''}));
+  if(r){toast('Alerta marcada como revisada');cargar()}
+}
+function copiar(t){
+  const ok=()=>toast('Copiado: '+t);
+  const alt=()=>{const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(a);a.select();try{document.execCommand('copy')?ok():toast(t)}catch(e){toast(t)}a.remove()};
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,alt);else alt();
+}
+
+/* ---------------- Eventos ---------------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  const d=t.dataset;
+  if(d.vista)return setVista(d.vista);
+  if(d.copiar)return copiar(d.copiar);
+  if(d.revisar)return revisar(d.revisar);
+  if(d.reasignar)return reasignar(d.reasignar);
+  if(d.ficha)return abrirFicha(d.ficha);
+  if(d.vincular)return vincular(d.vincular);
+  if(d.vinc)return confirmarVinculo(d.vinc);
+  if(d.nuevaIp!==undefined)return abrirFicha(null,{ip:d.nuevaIp,nombre:d.host||'',notas:d.host?'Nombre en red: '+d.host:''});
+  if(d.if){invFiltro=invFiltro===d.if&&d.if!=='todos'?'todos':d.if;return renderInv()}
+  switch(t.id){
+    case 'alToggle':alAbiertas=!alAbiertas;return render();
+    case 'rOtra':RS.i++;$('#rNueva').value=RS.L[RS.i%RS.L.length].ip;return;
+    case 'rOk':return confirmarReasignar();
+    case 'rCancelar':case 'rCerrar':case 'fCancelar':case 'sCerrar':return cerrar();
+    case 'fGuardar':return guardarFicha();
+    case 'fBorrar':return borrarFicha();
+    case 'fLibre':return usarLibre();
+    case 'bNueva':return abrirFicha(null,{area:''});
+    case 'bImportar':return importar();
+    case 'otra':sugIdx++;return render();
+  }
+  if(d.ip)return abrir(d.ip);
+  if(d.seg){seg=+d.seg;ls.set('seg',seg);sugIdx=0;filtro=null;return render()}
+  if(d.f){filtro=filtro===d.f?null:d.f;return render()}
+});
+$('#velo').onclick=cerrar;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrar()});
+$('#q').addEventListener('input',render);
+$('#iq').addEventListener('input',renderInv);
+$('#btnScan').onclick=async()=>{
+  try{const r=await api('/api/escanear',{});if(!r.ok)return toast(r.msg);
+    D.escaneando=true;render();toast('Escaneando… tarda menos de un minuto');setTimeout(cargar,2500)}
+  catch(e){toast(e.message)}
+};
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)cargar()});
+const ipInicial=new URLSearchParams(location.search).get('ip');
+if(ipInicial)VISTA='red';
+setVista(VISTA);
+cargar().then(()=>{if(ipInicial&&IPMAP[ipInicial]){abrir(ipInicial);history.replaceState(null,'','/')}});
+</script>
+</body>
+</html>

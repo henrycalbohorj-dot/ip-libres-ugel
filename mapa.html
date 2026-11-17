@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#222A34">
+<title>Mapa de red 3D · UGEL</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill='%23E8EDF2' d='M20 4l16 8-16 8-16-8z'/%3E%3Cpath fill='%2396A3B1' d='M4 12l16 8v14L4 26z'/%3E%3Cpath fill='%23C6CFD9' d='M20 20l16-8v14l-16 8z'/%3E%3Ccircle cx='25' cy='24' r='1.8' fill='%2316B876'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#0B1824;--bg2:#02050A;--panel:rgba(8,18,28,.78);--ink:#E3F4FF;--mut:#8FB3C9;--line:rgba(46,197,255,.28);--acc:#2EC5FF;--neon:#2EC5FF;
+  --on:#16B876;--off:#8794A2;--dhcp:#3DEBFF;--azul:#2F6FED;--amarillo:#F2B300;--rojo:#E5484D;
+  --f-num:'Chakra Petch',ui-sans-serif,system-ui,sans-serif;--f-txt:'Atkinson Hyperlegible',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:radial-gradient(120% 90% at 50% 0%,var(--bg1),var(--bg2));color:var(--ink);font:15px/1.4 var(--f-txt);-webkit-tap-highlight-color:transparent}
+#escena{position:fixed;inset:0;touch-action:none}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.caja{background:linear-gradient(180deg,rgba(10,26,40,.84),rgba(3,11,19,.8));backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:3px;
+  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);box-shadow:inset 0 0 24px rgba(46,197,255,.10),inset 0 1px 0 rgba(46,197,255,.35)}
+
+/* Encabezado */
+.top{position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));display:flex;gap:10px;align-items:flex-start;pointer-events:none;z-index:5}
+.top>*{pointer-events:auto}
+.marca{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px}
+.marca a{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;border:1px solid var(--line);text-decoration:none;color:var(--ink);font-size:18px}
+.marca h1{margin:0;font:700 19px/1.05 var(--f-num);color:var(--neon);text-shadow:0 0 14px rgba(46,197,255,.65);letter-spacing:.02em}
+.tele{margin:3px 0 0;font:500 12px var(--f-num);color:var(--neon);opacity:.85;display:flex;gap:10px}
+.tele span+span::before{content:'|';margin-right:10px;opacity:.4}
+.marca p{margin:2px 0 0;font-size:12.5px;color:var(--mut)}
+.buscar{position:relative;flex:1;max-width:360px;margin-left:auto}
+.buscar input{width:100%;font:inherit;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);backdrop-filter:blur(12px)}
+#res{position:absolute;left:0;right:0;top:calc(100% + 6px);list-style:none;margin:0;padding:6px;max-height:50vh;overflow:auto}
+#res button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;background:none;border-radius:10px;padding:9px 10px}
+#res button:hover,#res button:focus-visible{background:color-mix(in srgb,var(--acc) 12%,transparent)}
+#res small{color:var(--mut);font:600 13px var(--f-num);white-space:nowrap}
+
+/* Controles inferiores */
+.abajo{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;z-index:5;width:max-content;max-width:calc(100vw - 24px)}
+.pisos{display:flex;gap:4px;padding:5px}
+.pisos button{border:0;background:none;border-radius:12px;padding:9px 14px;font-weight:700;color:var(--mut);white-space:nowrap}
+.pisos button.on{background:var(--neon);color:#021019;box-shadow:0 0 18px rgba(46,197,255,.55)}
+.opciones{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.opc{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:13px;font-weight:700}
+.opc input{accent-color:var(--acc);width:16px;height:16px;margin:0}
+
+/* Leyenda */
+.leyenda{position:fixed;left:12px;bottom:calc(14px + env(safe-area-inset-bottom));padding:10px 12px;font-size:12.5px;z-index:4;max-width:220px}
+.leyenda b{display:block;font-size:12px;color:var(--mut);margin:0 0 4px}
+.leyenda div{display:flex;align-items:center;gap:8px;margin:3px 0}
+.leyenda i{display:inline-block;width:18px;height:4px;border-radius:2px;background:var(--c)}
+.leyenda i.led{width:10px;height:10px;border-radius:50%}
+@media (max-width:900px){.leyenda{display:none}}
+
+/* Panel de detalle */
+.panel{position:fixed;right:12px;top:calc(76px + env(safe-area-inset-top));width:330px;max-height:calc(100vh - 190px);overflow:auto;padding:16px;z-index:6}
+.panel h2{margin:0 26px 2px 0;font:700 21px/1.15 var(--f-txt)}
+.panel .sub{color:var(--mut);font-size:13.5px;margin:0 0 12px}
+.panel .ip{font:700 22px var(--f-num);display:flex;align-items:center;gap:8px}
+.panel .ip i{width:11px;height:11px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c)}
+.panel dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:12px 0}
+.panel dt{color:var(--mut);font-size:13.5px}.panel dd{margin:0;font-size:14px;word-break:break-word}
+.ruta{list-style:none;margin:6px 0 12px;padding:0;position:relative}
+.ruta li{position:relative;padding:4px 0 4px 20px;font-size:13.5px}
+.ruta li::before{content:"";position:absolute;left:5px;top:11px;width:8px;height:8px;border-radius:50%;background:var(--amarillo)}
+.ruta li:not(:last-child)::after{content:"";position:absolute;left:8px;top:19px;bottom:-5px;width:2px;background:var(--amarillo);opacity:.6}
+.ruta small{color:var(--mut);font-family:var(--f-num)}
+.cerrar{position:absolute;top:10px;right:10px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:none}
+.acciones{display:flex;gap:8px;flex-wrap:wrap}
+.acciones a{flex:1;text-align:center;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-weight:700;font-size:14px}
+.acciones a.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (max-width:700px){
+  .l-area{font-size:10px}.l-piso{font-size:13px;padding:3px 8px 3px 7px}.l-piso small{font-size:10px;margin-top:2px}.l-dev{font-size:10.5px}
+  .panel{left:8px;right:8px;top:auto;bottom:calc(8px + env(safe-area-inset-bottom));width:auto;max-height:52vh;border-radius:20px}
+  .marca p{display:none}.marca h1{font-size:16px}
+  .top{flex-wrap:wrap}.buscar{max-width:none;flex-basis:100%;order:3}
+  .pisos button{padding:8px 10px;font-size:14px}
+}
+.carga{position:fixed;inset:0;display:grid;place-items:center;z-index:20;background:radial-gradient(80% 70% at 50% 40%,rgba(8,30,46,.96),rgba(1,4,8,.98));transition:opacity .7s}
+.carga.fuera{opacity:0;pointer-events:none}
+.term{font:600 14px/1.5 var(--f-num);color:var(--neon);width:min(560px,86vw);text-shadow:0 0 10px rgba(46,197,255,.5)}
+.term p{margin:2px 0;animation:aparece .25s ease-out}.term p::before{content:'› ';opacity:.6}
+.term p.ok{color:#7dffc0}.term p.mal{color:#ff7a8a}
+.term .cursor{display:inline-block;width:9px;height:16px;background:var(--neon);vertical-align:-3px;animation:parpadeo .8s steps(1) infinite}
+@keyframes aparece{from{opacity:0;transform:translateX(-6px)}}@keyframes parpadeo{50%{opacity:0}}
+
+/* Etiquetas 3D */
+.l-piso{font:700 20px/1 var(--f-num);color:var(--neon);text-shadow:0 0 10px rgba(46,197,255,.7);background:linear-gradient(90deg,rgba(46,197,255,.22),rgba(4,14,24,.85) 30%);border-left:3px solid var(--neon);padding:6px 14px 6px 10px;white-space:nowrap;pointer-events:none;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);letter-spacing:.06em}
+.l-piso b{display:block;font-weight:700}.l-piso small{display:block;margin-top:4px;font:600 11.5px var(--f-num);color:var(--mut);text-shadow:none;letter-spacing:.02em}
+.l-piso small em{font-style:normal;color:#7dffc0}
+.l-dev,.l-area,.l-piso{transition:opacity .3s}.tapada{opacity:0!important}
+@media (max-width:700px){.l-piso{font-size:12.5px;padding:3px 8px 3px 7px;letter-spacing:.03em}.l-piso small{font-size:10px;margin-top:2px}}
+.l-area{font:700 12px var(--f-txt);color:var(--ink);opacity:.72;white-space:nowrap;pointer-events:none;text-shadow:0 1px 0 rgba(255,255,255,.7)}
+@media (prefers-color-scheme:dark){.l-area{text-shadow:0 1px 2px #000}}
+.l-dev{font:600 11.5px var(--f-txt);background:var(--panel);border:1px solid var(--line);padding:2px 7px;border-radius:7px;white-space:nowrap;pointer-events:none;transform:translateY(-14px)}
+.l-dev.red{font-family:var(--f-num);background:rgba(2,10,18,.85);color:var(--neon);border-color:rgba(46,197,255,.5)}
+.l-dev.sel{background:var(--acc);color:#fff;border-color:var(--acc)}
+
+/* ---------- Fondo futurista ---------- */
+#fondo{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+#lluvia{position:absolute;inset:0;width:100%;height:100%;opacity:.16;-webkit-mask-image:linear-gradient(to bottom,#000,transparent 75%);mask-image:linear-gradient(to bottom,#000,transparent 75%)}
+.rejilla{position:absolute;left:-60%;right:-60%;bottom:-8%;height:52%;transform:perspective(520px) rotateX(70deg);transform-origin:50% 100%;
+  background-image:linear-gradient(rgba(46,197,255,.28) 1px,transparent 1px),linear-gradient(90deg,rgba(46,197,255,.28) 1px,transparent 1px);background-size:64px 64px;
+  animation:avanza 5s linear infinite;-webkit-mask-image:linear-gradient(to top,#000 25%,transparent);mask-image:linear-gradient(to top,#000 25%,transparent)}
+@keyframes avanza{to{background-position:0 64px}}
+.sil{position:absolute;filter:drop-shadow(0 0 18px rgba(46,197,255,.45))}
+.estrellas{position:absolute;inset:0;background-image:radial-gradient(1px 1px at 12% 18%,#cfefff,transparent),radial-gradient(1px 1px at 72% 12%,#e8d8ff,transparent),radial-gradient(1.5px 1.5px at 38% 8%,#fff,transparent),radial-gradient(1px 1px at 88% 34%,#bfe9ff,transparent),radial-gradient(1px 1px at 22% 42%,#d6c6ff,transparent),radial-gradient(1px 1px at 55% 28%,#fff,transparent),radial-gradient(1.5px 1.5px at 6% 30%,#9fe2ff,transparent),radial-gradient(1px 1px at 94% 8%,#fff,transparent);background-size:420px 300px;opacity:.55;animation:titila 7s ease-in-out infinite alternate}
+@keyframes titila{to{opacity:.3}}
+.horizonte{position:absolute;left:-10%;right:-10%;bottom:12%;height:30%;background:radial-gradient(60% 55% at 50% 100%,rgba(46,197,255,.18),rgba(122,60,255,.10) 45%,transparent 75%)}
+.colectivo{position:absolute;left:0;right:0;bottom:-2vh;width:100%;height:46vh;opacity:.5;filter:drop-shadow(0 0 14px rgba(46,197,255,.35));translate:calc(var(--mx,0) * -18px) calc(var(--my,0) * -8px);
+  -webkit-mask-image:linear-gradient(to top,transparent 0,#000 30%);mask-image:linear-gradient(to top,transparent 0,#000 30%)}
+.colectivo .lejos{opacity:.35;filter:blur(1.2px)}
+.colectivo .ojos{animation:ojos 5s infinite}
+@keyframes ojos{0%,92%,100%{opacity:.9}94%{opacity:.15}96%{opacity:.9}}
+.hud{position:fixed;inset:10px;pointer-events:none;z-index:2;--b:rgba(46,197,255,.55)}
+.hud i{position:absolute;width:34px;height:34px;border:2px solid var(--b)}
+.hud i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0}.hud i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0}
+.hud i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0}.hud i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0}
+.glitch{animation:glitch 6s infinite steps(1)}
+.glitch.b{animation-delay:-2.7s}
+@keyframes glitch{0%,90%,100%{transform:none;clip-path:none}91%{transform:translate(-8px,2px);clip-path:inset(18% 0 58% 0)}92%{transform:translate(6px,-3px);clip-path:inset(62% 0 8% 0)}93%{transform:translate(-4px,0);clip-path:inset(4% 0 82% 0)}94%{transform:translate(3px,1px);clip-path:inset(40% 0 35% 0)}95%{transform:none;clip-path:none}}
+.persona{position:absolute;left:50%;top:46%;width:min(70vh,80vw);aspect-ratio:3/4;transform:translate(-50%,-50%);opacity:.26}
+.persona img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;-webkit-mask-image:radial-gradient(closest-side,#000 50%,transparent);mask-image:radial-gradient(closest-side,#000 50%,transparent)}
+.persona .p0{filter:grayscale(1) contrast(1.7) brightness(.85)}
+.persona .p1{mix-blend-mode:screen;filter:grayscale(1) contrast(1.7) sepia(1) hue-rotate(150deg) saturate(7);opacity:.85;animation:rgb1 2.6s infinite steps(2)}
+.persona .p2{mix-blend-mode:screen;filter:grayscale(1) contrast(1.7) sepia(1) hue-rotate(-40deg) saturate(7);opacity:.6;animation:rgb2 3.3s infinite steps(2)}
+.persona::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(46,197,255,.18) 0 1px,transparent 1px 4px);-webkit-mask-image:radial-gradient(closest-side,#000 50%,transparent);mask-image:radial-gradient(closest-side,#000 50%,transparent)}
+@keyframes rgb1{0%{transform:translate(7px,0)}50%{transform:translate(-3px,2px) skewX(3deg)}}
+@keyframes rgb2{0%{transform:translate(-7px,0)}50%{transform:translate(4px,-2px)}}
+.scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px)}
+.vineta{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.65))}
+#escena{z-index:1}
+@media (max-width:700px){.colectivo{height:30vh;opacity:.38}.persona{opacity:.2}.hud{display:none}}
+.aurora{position:absolute;inset:-20%;background:radial-gradient(40% 35% at 25% 30%,rgba(46,197,255,.16),transparent 70%),radial-gradient(35% 30% at 78% 22%,rgba(160,102,255,.16),transparent 70%),radial-gradient(45% 40% at 60% 85%,rgba(20,120,200,.14),transparent 70%);animation:aurora 22s ease-in-out infinite alternate}
+@keyframes aurora{to{transform:translate(4%,-3%) rotate(6deg) scale(1.08)}}
+.persona{translate:calc(var(--mx,0) * 12px) calc(var(--my,0) * 8px)}
+@media (prefers-reduced-motion:reduce){.glitch,.persona img,.aurora,.estrellas,.colectivo .ojos{animation:none!important}}
+
+/* ---------- Modo reposo (TV) ---------- */
+.top,.abajo,.zoom,.leyenda,.panel{transition:opacity .7s}
+body.reposo .top,body.reposo .abajo,body.reposo .zoom,body.reposo .leyenda,body.reposo .panel{opacity:0;pointer-events:none}
+body.reposo{cursor:none}
+.tvhud{position:fixed;inset:0;pointer-events:none;z-index:4}
+.tvhud>*{opacity:0;transition:opacity 1.4s}
+body.reposo .tvhud>*{opacity:1}
+.tvmarca{position:absolute;left:clamp(16px,2.4vw,48px);top:clamp(16px,2.4vw,44px);padding:14px 22px 14px 18px;border-left:3px solid var(--neon)}
+.tvmarca small{display:block;font:600 clamp(11px,.85vw,16px) var(--f-num);color:var(--mut);letter-spacing:.18em}
+.tvmarca b{display:block;font:700 clamp(22px,2.4vw,46px)/1.05 var(--f-num);color:var(--neon);text-shadow:0 0 18px rgba(46,197,255,.7);letter-spacing:.08em;margin:4px 0 6px}
+.tvmarca span{font:700 clamp(30px,3.6vw,72px)/1 var(--f-num);color:var(--ink);letter-spacing:.04em}
+.tvmarca em{display:block;font:500 clamp(12px,.95vw,18px) var(--f-num);font-style:normal;color:var(--mut);margin-top:4px}
+.tvkpi{position:absolute;right:clamp(16px,2.4vw,48px);top:clamp(16px,2.4vw,44px);display:flex;gap:clamp(14px,2vw,40px);padding:16px 24px}
+.tvkpi div{text-align:center}.tvkpi b{display:block;font:700 clamp(26px,3vw,60px)/1 var(--f-num);color:var(--neon);text-shadow:0 0 16px rgba(46,197,255,.6)}
+.tvkpi div:first-child b{color:#7dffc0;text-shadow:0 0 16px rgba(125,255,192,.5)}.tvkpi div:nth-child(2) b{color:var(--dhcp)}
+.tvkpi span{font:600 clamp(11px,.85vw,16px) var(--f-num);color:var(--mut);letter-spacing:.1em;text-transform:uppercase}
+.tvmsg{position:absolute;left:clamp(16px,2.4vw,48px);bottom:calc(clamp(44px,3.4vw,64px) + clamp(16px,2vw,36px));width:min(620px,42vw);padding:16px 22px 18px;border-left:3px solid var(--c,var(--neon))}
+.tvmsg small{display:flex;align-items:center;gap:8px;font:700 clamp(11px,.85vw,16px) var(--f-num);color:var(--c,var(--neon));letter-spacing:.2em}
+.tvmsg small::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c,var(--neon));box-shadow:0 0 10px var(--c,var(--neon));animation:parpadeo 1.2s steps(1) infinite}
+.tvmsg p{margin:8px 0 0;font:600 clamp(17px,1.55vw,32px)/1.3 var(--f-txt);color:var(--ink);min-height:2.6em}
+.tvmsg p::after{content:"▌";color:var(--c,var(--neon));animation:parpadeo .8s steps(1) infinite;margin-left:2px}
+.ticker{position:absolute;left:0;right:0;bottom:0;height:clamp(44px,3.4vw,64px);overflow:hidden;background:linear-gradient(90deg,rgba(2,10,18,.92),rgba(6,22,36,.8),rgba(2,10,18,.92));border-top:1px solid var(--line);display:flex;align-items:center}
+.ticker div{white-space:nowrap;font:600 clamp(15px,1.25vw,26px) var(--f-num);color:var(--ink);padding-left:100%;animation:cinta var(--dur,60s) linear infinite}
+.ticker i{font-style:normal;color:var(--neon);margin:0 clamp(18px,2vw,40px)}
+@keyframes cinta{to{transform:translateX(-100%)}}
+.l-foco{font:700 clamp(13px,1vw,20px) var(--f-num);color:#021019;background:linear-gradient(90deg,#7fe6ff,#2ec5ff);padding:6px 14px;white-space:nowrap;pointer-events:none;
+  clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);box-shadow:0 0 22px rgba(46,197,255,.8);transition:opacity .6s}
+.l-foco small{display:block;font:600 .75em var(--f-num);opacity:.8}
+@media (max-width:700px){.tvkpi,.tvmsg{display:none}}
+body.limpio .tvhud,body.limpio .hud{display:none}
+@media (prefers-reduced-motion:reduce){.ticker div{animation-duration:0s}}
+
+/* Zoom */
+.zoom{position:fixed;right:12px;bottom:calc(120px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px;z-index:5}
+.zoom button{width:44px;height:44px;border-radius:12px;font:700 22px/1 var(--f-num);display:grid;place-items:center;color:var(--neon)}
+.zoom button.chico{font-size:18px}
+</style>
+<script type="importmap">{"imports":{"three":"/vendor/three.module.min.js"}}</script>
+</head>
+<body>
+<div id="fondo" aria-hidden="true">
+  <div class="aurora"></div>
+  <canvas id="lluvia"></canvas>
+  <div class="persona" id="persona" hidden><img class="p0" alt=""><img class="p1" alt=""><img class="p2" alt=""></div>
+  <div class="estrellas"></div>
+  <div class="horizonte"></div>
+  <svg class="colectivo glitch" viewBox="0 0 1600 420" preserveAspectRatio="xMidYMax meet">
+    <defs>
+      <radialGradient id="cg" cx="50%" cy="80%" r="70%"><stop offset="0" stop-color="#2EC5FF" stop-opacity=".35"/><stop offset="1" stop-color="#2EC5FF" stop-opacity="0"/></radialGradient>
+      <symbol id="enc" viewBox="0 0 200 300">
+        <path d="M100 18C60 18 42 52 42 94c0 28 6 48 13 63l-17 19C22 186 11 207 7 238L0 300h200l-7-62c-4-31-15-52-31-62l-17-19c7-15 13-35 13-63 0-42-18-76-58-76z" fill="#02060b" stroke="#2EC5FF" stroke-opacity=".55" stroke-width="2"/>
+        <path d="M100 56c-23 0-36 21-36 46 0 27 16 48 36 48s36-21 36-48c0-25-13-46-36-46z" fill="#000"/>
+        <path d="M100 56c-23 0-36 21-36 46 0 27 16 48 36 48s36-21 36-48c0-25-13-46-36-46z" fill="url(#cg)"/>
+        <g class="ojos" stroke="#7FE6FF" stroke-width="3" stroke-linecap="round"><path d="M82 101h12M106 101h12"/></g>
+        <path d="M66 178l34 62 34-62" fill="none" stroke="#2EC5FF" stroke-opacity=".5" stroke-width="2"/>
+        <path d="M88 178l12 26 12-26z" fill="#0c1a26"/><path d="M100 204l-5 13 5 34 5-34z" fill="#123047" stroke="#2EC5FF" stroke-opacity=".4"/>
+      </symbol>
+    </defs>
+    <g class="lejos"><use href="#enc" x="560" y="170" width="130" height="200"/><use href="#enc" x="910" y="170" width="130" height="200"/><use href="#enc" x="735" y="190" width="120" height="185"/></g>
+    <use href="#enc" x="20" y="100" width="210" height="320"/><use href="#enc" x="190" y="150" width="170" height="260"/><use href="#enc" x="330" y="200" width="140" height="215"/>
+    <use href="#enc" x="1370" y="100" width="210" height="320"/><use href="#enc" x="1240" y="150" width="170" height="260"/><use href="#enc" x="1130" y="200" width="140" height="215"/>
+  </svg>
+  <div class="scan"></div><div class="vineta"></div>
+</div>
+<div id="escena" aria-label="Maqueta 3D de la red de la UGEL Chincha"></div>
+<div class="hud" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div class="tvhud" aria-hidden="true">
+  <div class="tvmarca caja"><small>UGEL CHINCHA · ÁREA DE INFORMÁTICA</small><b>CENTRO DE RED</b><span id="tvHora">--:--</span><em id="tvFecha"></em></div>
+  <div class="tvkpi caja"><div><b id="kOn">--</b><span>En línea</span></div><div><b id="kDhcp">--</b><span>Por DHCP</span></div><div><b id="kEq">--</b><span>Equipos</span></div></div>
+  <div class="tvmsg caja"><small id="mCat">RED</small><p id="mTxt"></p></div>
+  <div class="ticker"><div id="tick"></div></div>
+</div>
+<div class="carga" id="carga"><div class="term" id="term"><span class="cursor"></span></div></div>
+
+<div class="top">
+  <div class="marca caja">
+    <a href="/" title="Volver a IP Libres" aria-label="Volver a IP Libres">←</a>
+    <div><h1>Mapa de red</h1><p id="stats">UGEL Chincha</p><p class="tele"><span id="reloj">--:--:--</span><span id="tscan">escáner</span></p></div>
+  </div>
+  <div class="buscar">
+    <input id="q" type="search" placeholder="Buscar equipo, persona, área o IP" autocomplete="off" aria-label="Buscar equipo">
+    <ul id="res" class="caja" hidden></ul>
+  </div>
+</div>
+
+<aside class="panel caja" id="panel" hidden aria-live="polite">
+  <button class="cerrar" id="pCerrar" type="button" aria-label="Cerrar">✕</button>
+  <div id="pBody"></div>
+</aside>
+
+<div class="zoom">
+  <button type="button" class="caja" id="zMas" aria-label="Acercar">+</button>
+  <button type="button" class="caja" id="zMenos" aria-label="Alejar">−</button>
+  <button type="button" class="caja chico" id="zCentro" aria-label="Ver todo el edificio" title="Ver todo">⌖</button>
+</div>
+<div class="leyenda caja" aria-hidden="true">
+  <b>Cables</b>
+  <div><i style="--c:var(--amarillo);height:6px"></i>Troncal entre switches</div>
+  <div><i style="--c:var(--azul)"></i>Punto de red</div>
+  <div><i style="--c:var(--rojo)"></i>Servidor</div>
+  <b style="margin-top:8px">Estado</b>
+  <div><i class="led" style="--c:var(--on)"></i>Encendido ahora</div>
+  <div><i class="led" style="--c:var(--dhcp)"></i>Encendido con otra IP (DHCP)</div>
+  <div><i class="led" style="--c:var(--off)"></i>Apagado</div>
+</div>
+
+<div class="abajo">
+  <nav class="pisos caja" id="pisos" aria-label="Pisos"></nav>
+  <div class="opciones">
+    <label class="opc caja"><input type="checkbox" id="oSep" checked> Separar pisos</label>
+    <label class="opc caja"><input type="checkbox" id="oNom"> Nombres</label>
+    <label class="opc caja"><input type="checkbox" id="oTraf" checked> Tráfico</label>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from '/vendor/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from '/vendor/CSS2DRenderer.js';
+
+const $ = s => document.querySelector(s);
+const linea = (txt, cls = '') => { const t = $('#term'), c = t.querySelector('.cursor'); const p = document.createElement('p'); p.textContent = txt; if (cls) p.className = cls; t.insertBefore(p, c); };
+linea('Conectando con el escáner de red de la UGEL Chincha…');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sinTilde = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const OSCURO = true; // tema futurista fijo
+const MOVIL = matchMedia('(max-width: 700px)').matches;
+const QUIETO = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const COL = { dhcp: css('--dhcp'), on: css('--on'), off: css('--off'), azul: css('--azul'), amarillo: css('--amarillo'), rojo: css('--rojo') };
+
+/* ---------- Escena ---------- */
+const cont = $('#escena');
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+const TV = new URLSearchParams(location.search).has('tv'), LIMPIO = new URLSearchParams(location.search).has('limpio');
+if (LIMPIO) document.body.classList.add('limpio');
+renderer.setPixelRatio(TV ? 1 : Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = !MOVIL;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+cont.appendChild(renderer.domElement);
+const etiquetas = new CSS2DRenderer();
+etiquetas.setSize(innerWidth, innerHeight);
+Object.assign(etiquetas.domElement.style, { position: 'absolute', inset: '0', pointerEvents: 'none' });
+cont.appendChild(etiquetas.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 400);
+camera.position.set(0, 30, MOVIL ? 52 : 38);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.rotateSpeed = 0.6; controls.panSpeed = 0.7;
+// Zoom con la rueda hecho a mano: proporcional al giro y suavizado. El de OrbitControls da un salto fijo por
+// cada evento, y los mouse de alta precisión o touchpads mandan decenas de eventos por movimiento.
+let zoomObj = null; const zoomPtr = new THREE.Vector2();
+cont.addEventListener('wheel', e => {
+  e.preventDefault(); e.stopPropagation();
+  let dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+  dy = Math.max(-120, Math.min(120, dy));
+  const actual = camera.position.distanceTo(controls.target);
+  zoomObj = THREE.MathUtils.clamp((zoomObj ?? actual) * Math.exp(dy * 0.0010), controls.minDistance, controls.maxDistance);
+  zoomPtr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  vuelo = null;
+}, { capture: true, passive: false });
+const zRay = new THREE.Raycaster(), zPlano = new THREE.Plane(), zP = new THREE.Vector3(), ARRIBA = new THREE.Vector3(0, 1, 0);
+function aplicarZoom(dt) {
+  if (zoomObj == null) return;
+  const actual = camera.position.distanceTo(controls.target);
+  const nueva = actual + (zoomObj - actual) * Math.min(1, dt * 8);
+  zPlano.setFromNormalAndCoplanarPoint(ARRIBA, controls.target); zRay.setFromCamera(zoomPtr, camera);
+  const p = zRay.ray.intersectPlane(zPlano, zP) && zP.distanceTo(controls.target) < actual ? zP.clone() : controls.target.clone();
+  const r = nueva / actual;
+  camera.position.sub(p).multiplyScalar(r).add(p); controls.target.sub(p).multiplyScalar(r).add(p);
+  if (Math.abs(nueva - zoomObj) < 0.01) zoomObj = null;
+}
+controls.maxPolarAngle = Math.PI * 0.47; controls.minDistance = 3; controls.maxDistance = 220;
+controls.target.set(0, 6, 0);
+
+scene.add(new THREE.HemisphereLight(OSCURO ? 0x8fa3bf : 0xffffff, OSCURO ? 0x0b1016 : 0x9aa6b2, OSCURO ? 1.1 : 1.6));
+const sol = new THREE.DirectionalLight(0xffffff, OSCURO ? 1.2 : 1.8);
+sol.position.set(-18, 40, 22); sol.castShadow = !MOVIL;
+sol.shadow.mapSize.set(2048, 2048);
+Object.assign(sol.shadow.camera, { left: -30, right: 30, top: 30, bottom: -30, near: 1, far: 120 });
+scene.add(sol);
+
+/* ---------- Materiales y piezas ---------- */
+const M = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.05, ...extra });
+const MAT = {
+  losa: M(0x0f2232, { roughness: 0.35, metalness: 0.2, transparent: true, opacity: 0.86, emissive: 0x06263a, emissiveIntensity: 0.6 }),
+  canto: M(0x0a3a52, { emissive: 0x1aa9e0, emissiveIntensity: 0.35 }),
+  oscuro: M(0x0d1824, { roughness: 0.4, metalness: 0.5, emissive: 0x06182a, emissiveIntensity: 1 }),
+  gris: M(0x9fb3c6, { emissive: 0x0c2233 }), grisOsc: M(0x4d5f72),
+  pantalla: M(0x2b3a4f, { emissive: 0x1a3d6e, emissiveIntensity: 0.6, roughness: 0.3 }),
+  gabinete: M(0x0c1a28, { roughness: 0.35, metalness: 0.6, emissive: 0x08223a, emissiveIntensity: 1 }),
+  frente: M(0x9fb6cf, { transparent: true, opacity: 0.35, roughness: 0.1 }),
+  puertos: M(0xf2b300, { emissive: 0xf2b300, emissiveIntensity: 0.35 }),
+  core: M(0x2257e6, { emissive: 0x2257e6, emissiveIntensity: 0.9 }),
+  ledOn: new THREE.MeshBasicMaterial({ color: COL.on }), ledDhcp: new THREE.MeshBasicMaterial({ color: COL.dhcp }), ledOff: M(0x7c8794),
+  sel: new THREE.MeshBasicMaterial({ color: 0x2257e6, transparent: true, opacity: 0.85 }),
+  hit: new THREE.MeshBasicMaterial({ visible: false }),
+};
+const G = {}; const geo = (k, f) => G[k] || (G[k] = f());
+function texRejilla(paso = 32, a = 0.55) {
+  const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d');
+  x.fillStyle = '#000'; x.fillRect(0, 0, 256, 256); x.strokeStyle = `rgba(46,197,255,${a})`; x.lineWidth = 1;
+  for (let i = 0; i <= 256; i += paso) { x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 256); x.moveTo(0, i + .5); x.lineTo(256, i + .5); x.stroke(); }
+  x.strokeStyle = 'rgba(170,240,255,.95)'; x.lineWidth = 2; x.strokeRect(1, 1, 254, 254);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; return t;
+}
+function texBrillo() {
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(.25, 'rgba(255,255,255,.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(c);
+}
+const TEX = { rejilla: texRejilla(), brillo: texBrillo() };
+const ADD = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
+MAT.arista = new THREE.LineBasicMaterial({ color: 0x2ec5ff, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false });
+const caja = (w, h, d, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo(`b${w},${h},${d}`, () => new THREE.BoxGeometry(w, h, d)), mat); m.position.set(x, y, z); m.castShadow = true; return m; };
+
+function pieza(tipo) {
+  const g = new THREE.Group(); let alto = 0.6;
+  switch (tipo) {
+    case 'Switch':
+      g.add(caja(0.95, 1.25, 0.7, MAT.gabinete, 0, 0.625, 0));
+      g.add(caja(0.82, 0.14, 0.02, MAT.puertos, 0, 0.95, 0.36), caja(0.82, 0.14, 0.02, MAT.puertos, 0, 0.72, 0.36));
+      g.add(caja(0.86, 1.15, 0.02, MAT.frente, 0, 0.625, 0.37)); alto = 1.25; break;
+    case 'Router':
+      g.add(caja(1.2, 0.5, 0.8, MAT.oscuro, 0, 0.25, 0));
+      { const r = new THREE.Mesh(geo('ring', () => new THREE.TorusGeometry(0.75, 0.05, 10, 48)), MAT.core); r.rotation.x = Math.PI / 2; r.position.y = 0.55; g.add(r); g.userData.anillo = r; }
+      alto = 0.6; break;
+    case 'Server':
+      g.add(caja(0.48, 1.45, 0.78, MAT.oscuro, 0, 0.725, 0));
+      for (let i = 0; i < 4; i++) g.add(caja(0.36, 0.03, 0.02, MAT.puertos, 0, 0.35 + i * 0.28, 0.4));
+      alto = 1.45; break;
+    case 'Printer':
+      g.add(caja(0.6, 0.3, 0.46, MAT.gris, 0, 0.15, 0), caja(0.6, 0.06, 0.3, MAT.grisOsc, 0, 0.33, -0.06)); alto = 0.36; break;
+    case 'Laptop': {
+      g.add(caja(0.52, 0.03, 0.36, MAT.grisOsc, 0, 0.02, 0));
+      const s = caja(0.52, 0.34, 0.02, MAT.pantalla, 0, 0.19, -0.2); s.rotation.x = -0.25; g.add(s); alto = 0.38; break; }
+    default: // PC y otros
+      g.add(caja(0.28, 0.02, 0.18, MAT.oscuro, 0, 0.01, 0), caja(0.06, 0.2, 0.06, MAT.oscuro, 0, 0.11, 0),
+        caja(0.6, 0.38, 0.05, MAT.oscuro, 0, 0.4, 0), caja(0.54, 0.32, 0.01, MAT.pantalla, 0, 0.4, 0.03));
+      alto = 0.6;
+  }
+  const lineas = [];
+  g.traverse(m => { if (m.isMesh && m.geometry.type === 'BoxGeometry' && [MAT.gabinete, MAT.oscuro, MAT.gris].includes(m.material) && m.geometry.parameters.width > 0.2)
+    { const l = new THREE.LineSegments(geo('e' + m.geometry.uuid, () => new THREE.EdgesGeometry(m.geometry)), MAT.arista); l.position.copy(m.position); l.rotation.copy(m.rotation); lineas.push(l); } });
+  lineas.forEach(l => g.add(l));
+  return { g, alto };
+}
+
+/* ---------- Islas flotantes ---------- */
+const ruido = (x, z, s) => (Math.sin(x * 1.31 + s) * Math.cos(z * 1.73 + s * 2.1) + Math.sin(x * 0.53 - z * 0.81 + s * 3.7) + Math.sin(z * 2.9 - x * 0.37 + s)) / 6 + 0.5;
+function rectRedondo(x1, x2, z1, z2, r) {
+  const s = new THREE.Shape(), X1 = x1, X2 = x2, Y1 = -z2, Y2 = -z1;
+  s.moveTo(X1 + r, Y1); s.lineTo(X2 - r, Y1); s.quadraticCurveTo(X2, Y1, X2, Y1 + r); s.lineTo(X2, Y2 - r); s.quadraticCurveTo(X2, Y2, X2 - r, Y2);
+  s.lineTo(X1 + r, Y2); s.quadraticCurveTo(X1, Y2, X1, Y2 - r); s.lineTo(X1, Y1 + r); s.quadraticCurveTo(X1, Y1, X1 + r, Y1); return s;
+}
+MAT.roca = new THREE.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, flatShading: true, roughness: 0.92, metalness: 0.08, emissive: 0x12082a, emissiveIntensity: 0.5 });
+MAT.vetas = new THREE.MeshBasicMaterial({ vertexColors: true, ...ADD });
+// Parte de abajo de una isla: roca invertida con vetas de luz y cristales colgando
+function roca(W, D, prof, seed, cristales = 5) {
+  const g = new THREE.Group(), sx = Math.max(8, Math.round(W * 1.1)), sz = Math.max(6, Math.round(D * 1.1));
+  const geom = new THREE.PlaneGeometry(W, D, sx, sz); geom.rotateX(Math.PI / 2);
+  const pos = geom.attributes.position, n = pos.count, col = new Float32Array(n * 3), glow = new Float32Array(n * 3);
+  const cA = new THREE.Color(0x0e2433), cB = new THREE.Color(0x1c0e3a), c = new THREE.Color(), hondo = prof * 1.6;
+  const alturaEn = (x, z) => { const u = Math.min(1, Math.pow(Math.pow(Math.abs(x) / (W / 2), 4) + Math.pow(Math.abs(z) / (D / 2), 4), 0.25)), r = ruido(x, z, seed);
+    return -prof * (0.7 + 0.6 * r) * Math.pow(1 - u, 0.6) - prof * 0.7 * Math.pow(Math.max(0, 1 - u * 1.7), 2); };
+  for (let i = 0; i < n; i++) {
+    let x = pos.getX(i), z = pos.getZ(i);
+    const u = Math.pow(Math.pow(Math.abs(x) / (W / 2), 4) + Math.pow(Math.abs(z) / (D / 2), 4), 0.25);
+    if (u > 1) { x /= u; z /= u; }
+    const y = alturaEn(x, z); pos.setXYZ(i, x, y, z);
+    const t = Math.min(1, -y / hondo); c.copy(cA).lerp(cB, t); col.set([c.r, c.g, c.b], i * 3);
+    const veta = Math.abs(Math.sin(x * 0.9 + z * 0.55 + ruido(x, z, seed + 9) * 7 + seed)) > 0.965, borde = u > 0.975;
+    const k = veta ? 0.85 * (1 - t * 0.4) : borde ? 0.14 : 0;
+    glow.set(veta ? [0.18 * k, 0.77 * k, k] : [0.18 * k, 0.6 * k, k], i * 3);
+  }
+  geom.setAttribute('color', new THREE.BufferAttribute(col, 3)); geom.computeVertexNormals();
+  const m = new THREE.Mesh(geom, MAT.roca); g.add(m);
+  const gv = geom.clone(); gv.setAttribute('color', new THREE.BufferAttribute(glow, 3)); const mv = new THREE.Mesh(gv, MAT.vetas); mv.scale.setScalar(1.004); g.add(mv);
+  // Estalactitas y cristales
+  for (let i = 0; i < cristales; i++) {
+    const a = seed * 7 + i * 2.4, x = Math.cos(a) * W * 0.28 * (0.3 + (i % 3) * 0.3), z = Math.sin(a) * D * 0.28 * (0.3 + (i % 2) * 0.5), y = alturaEn(x, z);
+    const h = prof * (0.35 + ruido(x, z, i) * 0.5);
+    const est = new THREE.Mesh(geo('cono', () => new THREE.ConeGeometry(1, 1, 5).rotateX(Math.PI)), MAT.roca); est.scale.set(prof * 0.16, h, prof * 0.16); est.position.set(x, y - h / 2 + 0.1, z); g.add(est);
+    if (i % 2 === 0) {
+      const cr = new THREE.Mesh(geo('cristal', () => new THREE.OctahedronGeometry(1, 0)), new THREE.MeshBasicMaterial({ color: i % 4 ? 0xa066ff : 0x2ec5ff, opacity: 0.9, ...ADD }));
+      cr.scale.set(0.16, 0.7, 0.16); cr.position.set(x + 0.4, y - h * 0.55, z + 0.3); cr.rotation.z = 0.3; g.add(cr);
+      const hl = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.brillo, color: i % 4 ? 0xa066ff : 0x2ec5ff, opacity: 0.55, ...ADD })); hl.scale.setScalar(1.8); cr.add(hl); hl.scale.set(11, 2.6, 1);
+    }
+  }
+  return g;
+}
+const BASES = [], CASCADAS = [];
+// Cascadas de energía que caen desde el borde de cada isla
+function cascada(shape, g, n) {
+  const pts = shape.getSpacedPoints(n), pos = new Float32Array(n * 3), col = new Float32Array(n * 3), est = [];
+  for (let i = 0; i < n; i++) { const p = pts[i]; est.push({ x: p.x, z: -p.y, f: Math.random() * 4, v: 0.6 + Math.random() * 0.9, L: 2.5 + Math.random() * 3.5, c: Math.random() < 0.3 ? [0.63, 0.4, 1] : [0.18, 0.77, 1] }); }
+  const geom = new THREE.BufferGeometry(); geom.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const pts3 = new THREE.Points(geom, new THREE.PointsMaterial({ size: 0.2, map: TEX.brillo, vertexColors: true, ...ADD })); g.add(pts3);
+  CASCADAS.push({ pts3, est });
+}
+
+/* ---------- Datos ---------- */
+let TOPO, IP = {}, ULT = 0;
+const SEP = { normal: 5.2, separado: 10.5 };
+let sep = SEP.separado, sepObj = SEP.separado, pisoFiltro = 0;
+const pisoY = n => (n - 1) * sep;
+const PISOS = new Map(), EQ = new Map(), CABLES = [], HIT = [], ETQ = { pisos: [], areas: [] };
+let raiz, seleccion = null;
+
+function mapear(t) {
+  const prof = {}; for (const p of t.pisos) prof[p.n] = { y1: p.y1, mid: (p.y2 - p.y1) / 2 };
+  return (x, y, piso) => [x / 100 - 20, (y - prof[piso].y1 - prof[piso].mid) / 100];
+}
+
+function construir(t) {
+  TOPO = t; raiz = new THREE.Group(); scene.add(raiz);
+  const xy = mapear(t);
+  // Pisos y áreas
+  for (const p of t.pisos) {
+    const g = new THREE.Group(); g.userData.n = p.n; raiz.add(g);
+    const pts = t.areas.filter(a => a.piso === p.n).flatMap(a => [xy(a.x1, a.y1, p.n), xy(a.x2, a.y2, p.n)])
+      .concat(t.equipos.filter(e => e.piso === p.n).map(e => xy(e.x, e.y, p.n)));
+    const xs = pts.map(q => q[0]), zs = pts.map(q => q[1]);
+    const x1 = Math.min(...xs) - 1.2, x2 = Math.max(...xs) + 1.2, z1 = Math.min(...zs) - 1.2, z2 = Math.max(...zs) + 1.2;
+    const tr = TEX.rejilla.clone(); tr.needsUpdate = true; tr.repeat.set(1 / 2.2, 1 / 2.2);
+    const techo = new THREE.MeshStandardMaterial({ color: 0x06121c, roughness: 0.35, metalness: 0.4, emissive: 0x2ec5ff, emissiveIntensity: 0.5, emissiveMap: tr });
+    const forma = rectRedondo(x1, x2, z1, z2, 1.4);
+    const lg = new THREE.ExtrudeGeometry(forma, { depth: 0.3, bevelEnabled: false, curveSegments: 6 }); lg.rotateX(-Math.PI / 2); lg.translate(0, -0.3, 0);
+    const losa = new THREE.Mesh(lg, [techo, MAT.canto]); losa.receiveShadow = true; g.add(losa);
+    const contorno = forma.getPoints(8);
+    for (const [y, o] of [[0.01, 1], [-0.3, 0.6]]) g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(contorno.map(q => new THREE.Vector3(q.x, y, -q.y))), new THREE.LineBasicMaterial({ color: 0x7fe6ff, opacity: o, ...ADD })));
+    const base = roca(x2 - x1 - 0.2, z2 - z1 - 0.2, p.n === 1 ? 6 : 4.4, p.n * 3.1, MOVIL ? 4 : 7);
+    base.position.set((x1 + x2) / 2, -0.3, (z1 + z2) / 2); g.add(base); BASES.push(base);
+    cascada(forma, g, MOVIL ? 26 : 60);
+    const lp = document.createElement('div'); lp.className = 'l-piso'; lp.innerHTML = `<b>${esc(p.nombre).toUpperCase()}</b><small>sincronizando…</small>`;
+    const op = new CSS2DObject(lp); op.position.set(MOVIL ? x2 - 1.5 : x1 + 2.6, 0.5, z2 - 0.5); g.add(op); ETQ.pisos.push({ n: p.n, el: lp, o: op });
+    const tintes = OSCURO ? [0x15466b, 0x0f5a4e, 0x5a4a1e, 0x3f2f6b, 0x0f5566, 0x5a2a3f] : [0xdbe8fb, 0xd9f2e6, 0xfbf0d6, 0xece4fb, 0xd8eff3, 0xfbe1e5];
+    t.areas.filter(a => a.piso === p.n).forEach((a, i) => {
+      const [ax1, az1] = xy(a.x1, a.y1, p.n), [ax2, az2] = xy(a.x2, a.y2, p.n);
+      const w = ax2 - ax1, d = az2 - az1, cx = (ax1 + ax2) / 2, cz = (az1 + az2) / 2;
+      const piso = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: tintes[i % tintes.length], roughness: 0.95 }));
+      piso.rotation.x = -Math.PI / 2; piso.position.set(cx, 0.01, cz); piso.receiveShadow = true; g.add(piso);
+      const muro = new THREE.Mesh(new THREE.BoxGeometry(w, 0.45, d), new THREE.MeshStandardMaterial({ color: tintes[i % tintes.length], transparent: true, opacity: 0.28, depthWrite: false }));
+      muro.position.set(cx, 0.225, cz); g.add(muro);
+      const arista = new THREE.LineSegments(new THREE.EdgesGeometry(muro.geometry), new THREE.LineBasicMaterial({ color: 0x5fd8ff, transparent: true, opacity: 0.55 }));
+      arista.position.copy(muro.position); g.add(arista);
+      const la = document.createElement('div'); la.className = 'l-area'; la.dataset.area = '1'; la.textContent = a.nombre;
+      const oa = new CSS2DObject(la); oa.position.set(cx, 0.55, az1 + 0.35); g.add(oa); ETQ.areas.push({ n: p.n, el: la, o: oa });
+    });
+    PISOS.set(p.n, g);
+    if (p === t.pisos[0]) CAJA = { x1, x2, z1, z2 }; else CAJA = { x1: Math.min(CAJA.x1, x1), x2: Math.max(CAJA.x2, x2), z1: Math.min(CAJA.z1, z1), z2: Math.max(CAJA.z2, z2) };
+  }
+  // Equipos
+  for (const e of t.equipos) {
+    const { g, alto } = pieza(e.tipo);
+    const [x, z] = xy(e.x, e.y, e.piso); g.position.set(x, 0, z);
+    const led = new THREE.Mesh(geo('led', () => new THREE.SphereGeometry(0.075, 14, 10)), MAT.ledOff); led.position.y = alto + 0.14; g.add(led);
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.brillo, color: COL.on, opacity: 0, ...ADD })); halo.scale.setScalar(0.85); led.add(halo);
+    const hit = new THREE.Mesh(geo('hit', () => new THREE.BoxGeometry(1.1, 1.6, 1.1)), MAT.hit); hit.position.y = 0.6; hit.userData.id = e.id; g.add(hit); HIT.push(hit);
+    const lbl = document.createElement('div'); lbl.className = 'l-dev' + (['Switch', 'Router'].includes(e.tipo) ? ' red' : ''); lbl.textContent = etiqueta(e);
+    const ol = new CSS2DObject(lbl); ol.position.y = alto + 0.3; g.add(ol);
+    PISOS.get(e.piso).add(g);
+    EQ.set(e.id, { e, g, led, halo, lbl, ol, alto, corto: ['Switch', 'Router'].includes(e.tipo) ? corto(e.nombre) : '' });
+  }
+  // Cables
+  const vecinos = new Map();
+  for (const l of t.enlaces) {
+    const A = EQ.get(l.a), B = EQ.get(l.b); if (!A || !B) continue;
+    const red = d => ['Switch', 'Router'].includes(d.e.tipo);
+    const tipo = red(A) && red(B) ? 'troncal' : (A.e.tipo === 'Server' || B.e.tipo === 'Server') ? 'servidor' : 'punto';
+    const color = tipo === 'troncal' ? COL.amarillo : tipo === 'servidor' ? COL.rojo : '#3d8bff';
+    const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.45, roughness: 0.4, transparent: true, opacity: tipo === 'punto' ? 0.8 : 0.95 });
+    const tubo = new THREE.Mesh(new THREE.BufferGeometry(), mat); raiz.add(tubo);
+    const glow = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial({ color, opacity: tipo === 'punto' ? 0.09 : 0.22, ...ADD })); raiz.add(glow);
+    const c = { l, A, B, tipo, tubo, glow, mat, curva: null, t0: Math.random(), vel: tipo === 'troncal' ? 0.22 : 0.35 + Math.random() * 0.2 };
+    CABLES.push(c);
+    for (const [u, v, pu, pv] of [[A, B, l.pa, l.pb], [B, A, l.pb, l.pa]]) (vecinos.get(u.e.id) || vecinos.set(u.e.id, []).get(u.e.id)).push({ d: v, c, puertoPropio: pu, puertoOtro: pv });
+  }
+  t.vecinos = vecinos;
+  trazarCables();
+}
+const etiqueta = e => e.nombre;
+function corto(n) {
+  return String(n).replace(/\(.*?\)/g, '').replace(/\/\s*\d+\s*PUERTOS/ig, '').replace(/PUERTOS/ig, '').replace(/GABINETE\s+[\d.]+\s+/i, '')
+    .replace(/SWITCH|SWTICH/i, 'SW').replace(/\(puerta de enlace\)/i, '').replace(/\s+/g, ' ').replace(/[\s/]+$/, '').trim() || n;
+}
+/* ---------- Orden de etiquetas: según la distancia y sin encimarse ---------- */
+const vEt = new THREE.Vector3();
+function ordenarEtiquetas() {
+  const D = camera.position.distanceTo(controls.target), W = innerWidth, H = innerHeight, lejos = D > 26, cand = [];
+  for (const x of ETQ.pisos) if (PISOS.get(x.n).visible) cand.push({ el: x.el, o: x.o, p: 90 });
+  for (const x of ETQ.areas) {
+    if (!PISOS.get(x.n).visible || x.el.style.visibility === 'hidden') continue;
+    if (D > (MOVIL ? 30 : 58)) { x.el.classList.add('tapada'); continue; }
+    cand.push({ el: x.el, o: x.o, p: 50 });
+  }
+  for (const d of EQ.values()) {
+    if (!d.ol.visible || !d.g.parent.visible) continue;
+    const sel = d.e.id === seleccion, tp = d.e.tipo, lim = sel || d.hover ? 1e9 : tp === 'Router' ? 1e9 : tp === 'Switch' ? 48 : 30;
+    if (D > lim) { d.lbl.classList.add('tapada'); continue; }
+    const txt = lejos && !sel && !d.hover && d.corto ? d.corto : etiqueta(d.e);
+    if (d.lbl.textContent !== txt) { d.lbl.textContent = txt; d.lbl._w = 0; }
+    cand.push({ el: d.lbl, o: d.ol, p: sel ? 100 : d.hover ? 95 : tp === 'Router' ? 80 : tp === 'Switch' ? 70 : 30 });
+  }
+  cand.sort((a, b) => b.p - a.p);
+  const puestos = [];
+  for (const c of cand) {
+    c.o.getWorldPosition(vEt); vEt.project(camera);
+    if (vEt.z > 1 || Math.abs(vEt.x) > 1.2 || Math.abs(vEt.y) > 1.2) continue;
+    if (!c.el._w) { c.el._w = c.el.offsetWidth; c.el._h = c.el.offsetHeight; }
+    const w = c.el._w || 70, h = c.el._h || 20, sx = (vEt.x + 1) / 2 * W, sy = (1 - vEt.y) / 2 * H;
+    const r = [sx - w / 2 - 4, sy - h / 2 - 3, sx + w / 2 + 4, sy + h / 2 + 3];
+    const choca = c.p < 95 && puestos.some(q => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1]);
+    c.el.classList.toggle('tapada', choca);
+    if (!choca) puestos.push(r);
+  }
+}
+
+function posMundo(d) { const v = new THREE.Vector3(); d.g.getWorldPosition(v); return v; }
+function trazarCables() {
+  raiz.updateMatrixWorld(true);
+  for (const c of CABLES) {
+    const a = posMundo(c.A).add(new THREE.Vector3(0, c.A.e.tipo === 'Switch' ? 0.95 : 0.08, 0));
+    const b = posMundo(c.B).add(new THREE.Vector3(0, c.B.e.tipo === 'Switch' ? 0.95 : 0.08, 0));
+    let curva;
+    if (Math.abs(a.y - b.y) > 0.5) { // entre pisos: sube por un ducto vertical
+      const dy = b.y - a.y;
+      curva = new THREE.CubicBezierCurve3(a, a.clone().add(new THREE.Vector3(0, dy * 0.55, 0)), b.clone().add(new THREE.Vector3(0, -dy * 0.55, 0)), b);
+    } else {
+      const m = a.clone().lerp(b, 0.5); m.y += 0.35 + a.distanceTo(b) * 0.06;
+      curva = new THREE.QuadraticBezierCurve3(a, m, b);
+    }
+    c.curva = curva;
+    c.tubo.geometry.dispose();
+    const rad = c.tipo === 'troncal' ? 0.07 : c.tipo === 'servidor' ? 0.045 : 0.025, seg = c.tipo === 'punto' ? 18 : 40;
+    c.tubo.geometry = new THREE.TubeGeometry(curva, seg, rad, 6, false);
+    c.glow.geometry.dispose(); c.glow.geometry = new THREE.TubeGeometry(curva, seg, rad * 3.4, 6, false);
+  }
+}
+
+/* ---------- Tráfico animado ---------- */
+let PART;
+function crearParticulas() {
+  PART = new THREE.InstancedMesh(new THREE.SphereGeometry(0.1, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffffff, ...ADD }), CABLES.length);
+  CABLES.forEach((c, i) => PART.setColorAt(i, new THREE.Color(c.tipo === 'troncal' ? 0xfff2b0 : c.tipo === 'servidor' ? 0xffc2c4 : 0xbfe0ff)));
+  raiz.add(PART);
+}
+const tmp = new THREE.Object3D();
+function moverParticulas(t) {
+  const ver = $('#oTraf').checked && !QUIETO;
+  CABLES.forEach((c, i) => {
+    const activo = ver && c.tubo.visible && (c.tipo !== 'punto' || encendido(c.A.e) || encendido(c.B.e));
+    if (!activo) { tmp.scale.setScalar(0); } else { const u = (c.t0 + t * c.vel) % 1; tmp.position.copy(c.curva.getPointAt(u)); tmp.scale.setScalar(c.tipo === 'punto' ? 0.7 : 1.1); }
+    tmp.updateMatrix(); PART.setMatrixAt(i, tmp.matrix);
+  });
+  PART.instanceMatrix.needsUpdate = true;
+}
+
+/* ---------- Estado en vivo (desde IP Libres) ---------- */
+let RED = {};
+// Equipo del inventario que está encendido, pero con la IP que le dio el DHCP (lo reconoce por su MAC)
+const dhcpDe = e => { const q = e.invId && RED[e.invId]; return q && q.dhcp && !(IP[e.ip] && IP[e.ip].on) ? q.ipActual : ''; };
+const encendido = e => !!(e.ip && IP[e.ip] && IP[e.ip].on) || !!dhcpDe(e) || ((e.tipo === 'Switch' || e.tipo === 'Router') && true);
+async function estado() {
+  try {
+    const j = await (await fetch('/api/estado', { cache: 'no-store' })).json();
+    IP = {}; j.segmentos.forEach(s => s.ips.forEach(x => IP[x.ip] = x)); RED = j.equiposRed || {}; ULT = j.ultimoEscaneo;
+    let on = 0;
+    let nd = 0;
+    for (const d of EQ.values()) { const o = encendido(d.e), dh = dhcpDe(d.e); d.led.material = dh ? MAT.ledDhcp : o ? MAT.ledOn : MAT.ledOff; d.halo.material.color.set(dh ? COL.dhcp : COL.on); d.halo.material.opacity = o ? 0.9 : 0; if (o && d.e.ip) on++; if (dh) nd++; }
+    const tot = TOPO.equipos.filter(e => !['Switch', 'Router'].includes(e.tipo)).length;
+    for (const x of ETQ.pisos) {
+      const L = TOPO.equipos.filter(e => e.piso === x.n && !['Switch', 'Router'].includes(e.tipo)), o = L.filter(encendido).length;
+      x.el.querySelector('small').innerHTML = `<em>●</em> ${o}/${L.length} en línea`; x.el._w = 0;
+    }
+    DATOS = { on, tot, nd, ult: ULT, pisos: ETQ.pisos.map(x => { const L = TOPO.equipos.filter(e => e.piso === x.n && !['Switch', 'Router'].includes(e.tipo)); return { n: x.n, o: L.filter(encendido).length, t: L.length }; }) };
+    actualizarTV();
+    $('#stats').textContent = `${TOPO.equipos.length} equipos en 3 pisos. ${on} de ${tot} encendidos ahora${nd ? ` (${nd} por DHCP con otra IP)` : ''}.`;
+    $('#tscan').textContent = j.escaneando ? 'escaneando…' : 'escaneo ' + hace(ULT);
+    if (seleccion) detalle(seleccion);
+  } catch (e) { $('#stats').textContent = 'Sin conexión con el escáner'; }
+  setTimeout(estado, 20000);
+}
+
+/* ---------- Selección, ruta y detalle ---------- */
+function rutaAlRouter(id) {
+  const prev = new Map([[id, null]]), cola = [id];
+  while (cola.length) {
+    const u = cola.shift(); if (EQ.get(u).e.tipo === 'Router') {
+      const r = []; let k = u; while (k) { r.unshift(k); k = prev.get(k) && prev.get(k).id; }
+      return r;
+    }
+    for (const v of TOPO.vecinos.get(u) || []) if (!prev.has(v.d.e.id)) { prev.set(v.d.e.id, { id: u }); cola.push(v.d.e.id); }
+  }
+  return [id];
+}
+let anillo, HAZSEL;
+function seleccionar(id, volar = true) {
+  seleccion = id; const d = EQ.get(id); if (!d) return;
+  const ruta = rutaAlRouter(id), enRuta = new Set();
+  for (let i = 0; i < ruta.length - 1; i++) enRuta.add(ruta[i] + '|' + ruta[i + 1]).add(ruta[i + 1] + '|' + ruta[i]);
+  for (const c of CABLES) { const k = c.A.e.id + '|' + c.B.e.id; const r = enRuta.has(k); c.mat.opacity = r ? 1 : 0.1; c.mat.emissiveIntensity = r ? 1.3 : 0.05; c.glow.material.opacity = r ? 0.55 : 0.02; }
+  for (const x of EQ.values()) x.lbl.classList.toggle('sel', x.e.id === id), x.ol.visible = $('#oNom').checked || x.e.id === id || ruta.includes(x.e.id) || ['Router'].includes(x.e.tipo);
+  if (!anillo) { anillo = new THREE.Mesh(new THREE.RingGeometry(0.62, 0.78, 40), MAT.sel); anillo.rotation.x = -Math.PI / 2; }
+  d.g.add(anillo); anillo.position.y = 0.03;
+  if (!HAZSEL) HAZSEL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 7, 10, 1, true), new THREE.MeshBasicMaterial({ color: 0x2ec5ff, opacity: 0.55, ...ADD }));
+  d.g.add(HAZSEL); HAZSEL.position.y = 3.5;
+  detalle(id, ruta);
+  if (volar) volarA(posMundo(d), d.e.tipo === 'Switch' || d.e.tipo === 'Router' ? 9 : 6.5);
+}
+function deseleccionar() {
+  seleccion = null; $('#panel').hidden = true; if (anillo && anillo.parent) anillo.parent.remove(anillo);
+  for (const c of CABLES) { c.mat.opacity = c.tipo === 'punto' ? 0.8 : 0.95; c.mat.emissiveIntensity = 0.45; c.glow.material.opacity = c.tipo === 'punto' ? 0.09 : 0.22; }
+  if (HAZSEL && HAZSEL.parent) HAZSEL.parent.remove(HAZSEL);
+  for (const x of EQ.values()) x.lbl.classList.remove('sel');
+  aplicarNombres();
+}
+const NOMBRE_TIPO = { Pc: 'PC', Printer: 'Impresora', Server: 'Servidor', Switch: 'Switch', Router: 'Router', Laptop: 'Laptop' };
+function hace(t) { if (!t) return 'nunca'; const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'hace un momento' : m < 60 ? `hace ${m} min` : m < 2880 ? `hace ${Math.round(m / 60)} h` : `hace ${Math.round(m / 1440)} días`; }
+function detalle(id, ruta = rutaAlRouter(id)) {
+  const { e } = EQ.get(id), dh = dhcpDe(e), x = (dh ? IP[dh] : IP[e.ip]) || {}, on = encendido(e), q = (e.invId && RED[e.invId]) || {};
+  const vec = (TOPO.vecinos.get(id) || []);
+  const sw = vec.find(v => ['Switch', 'Router'].includes(v.d.e.tipo));
+  const est = e.tipo === 'Switch' || e.tipo === 'Router' ? 'Equipo de red' : dh ? `Encendido por DHCP con la ${dh}${e.ip ? ` (su IP es la ${e.ip})` : ' (sin IP fija)'}` : !e.ip ? (e.invId ? 'Sin IP fija: se reconoce por su MAC' : 'Sin IP asignada') : on ? 'Encendido ahora' : `Apagado${x.visto ? ', visto ' + hace(x.visto) : ''}`;
+  const filas = [['Tipo', (e.tipoInv || NOMBRE_TIPO[e.tipo] || e.tipo) + (e.modelo && ['Switch', 'Router'].includes(e.tipo) ? ` (${esc(e.modelo)})` : '')],
+    ['Área', esc(e.areaInv || e.area || '—')], ['Piso', e.piso]];
+  if (sw && e.tipo !== 'Switch' && e.tipo !== 'Router') filas.push(['Conectado a', `${esc(sw.d.e.nombre)}<br><span style="color:var(--mut);font-family:var(--f-num)">puerto ${esc(sw.puertoOtro)}</span>`]);
+  if (e.tipo === 'Switch') filas.push(['Equipos conectados', vec.filter(v => !['Switch', 'Router'].includes(v.d.e.tipo)).length]);
+  if (x.host) filas.push(['Nombre en red', esc(x.host)]);
+  if (x.mac || q.mac) filas.push(['MAC', `<span style="font-family:var(--f-num)">${esc(x.mac || q.mac)}</span>`]);
+  if (dh) filas.push(['IP por DHCP', `<span style="font-family:var(--f-num);color:var(--dhcp)">${esc(dh)}</span>`]);
+  if (e.nombrePT && sinTilde(e.nombrePT) !== sinTilde(e.nombre)) filas.push(['En Packet Tracer', esc(e.nombrePT)]);
+  const pasos = ruta.slice(1).map((k, i) => { const d = EQ.get(k).e; const v = (TOPO.vecinos.get(ruta[i]) || []).find(v => v.d.e.id === k); return `<li>${esc(d.nombre)} <small>${esc(v ? v.puertoOtro : '')}</small></li>`; });
+  $('#pBody').innerHTML = `<h2>${esc(e.nombre)}</h2><p class="sub">${esc(est)}</p>
+    ${e.ip ? `<div class="ip" style="--c:${dh ? COL.dhcp : on ? COL.on : COL.off}"><i></i>${esc(e.ip)}</div>` : ''}
+    <dl>${filas.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+    ${pasos.length ? `<b style="font-size:13.5px">Camino hasta el router</b><ol class="ruta">${pasos.join('')}</ol>` : ''}
+    <div class="acciones">${e.ip ? `<a class="pri" href="/?ip=${encodeURIComponent(e.ip)}">Ver en IP Libres</a>` : ''}</div>`;
+  $('#panel').hidden = false;
+}
+
+/* ---------- Cámara ---------- */
+let vuelo = null;
+function volarA(p, dist) {
+  const dir = camera.position.clone().sub(controls.target).normalize();
+  if (dir.y < 0.35) dir.y = 0.35; dir.normalize();
+  vuelo = { t: 0, c0: camera.position.clone(), t0: controls.target.clone(), c1: p.clone().add(dir.multiplyScalar(dist)), t1: p.clone() };
+}
+// Encuadre: busca la distancia mínima en la que el edificio (o el piso elegido) entra completo en pantalla
+let CAJA = { x1: -21, x2: 21, z1: -7.5, z2: 7.5 };
+function encuadre() {
+  const vertical = camera.aspect < 0.8;
+  const alto = pisoFiltro ? 1.6 : (TOPO.pisos.length - 1) * sepObj + 1.6, y0 = pisoFiltro ? (pisoFiltro - 1) * sepObj : 0;
+  const elev = (vertical ? (pisoFiltro ? 55 : 24) : (pisoFiltro ? 50 : 30)) * Math.PI / 180;
+  const az = (vertical ? 62 : 0) * Math.PI / 180;
+  const t = new THREE.Vector3((CAJA.x1 + CAJA.x2) / 2, y0 + alto / 2 - 0.6, (CAJA.z1 + CAJA.z2) / 2);
+  const dir = new THREE.Vector3(Math.sin(az) * Math.cos(elev), Math.sin(elev), Math.cos(az) * Math.cos(elev));
+  const esquinas = [];
+  for (const x of [CAJA.x1, CAJA.x2]) for (const z of [CAJA.z1, CAJA.z2]) for (const y of [y0 - (pisoFiltro ? 1 : 3.5), y0 + alto]) esquinas.push(new THREE.Vector3(x, y, z));
+  const cam = camera.clone(), v = new THREE.Vector3();
+  const entra = d => { cam.position.copy(t).addScaledVector(dir, d); cam.lookAt(t); cam.updateMatrixWorld(); cam.updateProjectionMatrix();
+    return esquinas.every(p => { v.copy(p).project(cam); return Math.abs(v.x) < 0.94 && v.y < 0.72 && v.y > -0.62 && v.z < 1; }); };
+  let lo = 2, hi = 300; for (let i = 0; i < 30; i++) { const m = (lo + hi) / 2; if (entra(m)) hi = m; else lo = m; }
+  return { t, c: t.clone().addScaledVector(dir, hi) };
+}
+function vistaGeneral() {
+  const { t, c } = encuadre();
+  vuelo = { t: 0, c0: camera.position.clone(), t0: controls.target.clone(), c1: c, t1: t };
+}
+
+/* ---------- Controles de la interfaz ---------- */
+function aplicarPisos() {
+  for (const [n, g] of PISOS) {
+    g.visible = !pisoFiltro || n === pisoFiltro;
+    g.traverse(o => { if (o.isCSS2DObject) o.element.style.visibility = g.visible && !(o.element.dataset.area && camera.aspect < 0.8 && !pisoFiltro) ? '' : 'hidden'; });
+  }
+  for (const c of CABLES) c.glow.visible = c.tubo.visible = !pisoFiltro || (c.A.e.piso === pisoFiltro && c.B.e.piso === pisoFiltro);
+  $('#pisos').innerHTML = [[0, 'Todo el edificio'], ...TOPO.pisos.slice().reverse().map(p => [p.n, p.nombre])]
+    .map(([n, t]) => `<button type="button" data-p="${n}" class="${n === pisoFiltro ? 'on' : ''}" aria-pressed="${n === pisoFiltro}">${t}</button>`).join('');
+}
+function aplicarNombres() {
+  const todos = $('#oNom').checked;
+  const fijos = MOVIL ? ['Router'] : ['Switch', 'Router'];
+  for (const x of EQ.values()) x.ol.visible = todos || fijos.includes(x.e.tipo) || x.e.id === seleccion;
+}
+$('#pisos').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; pisoFiltro = +b.dataset.p; aplicarPisos(); vistaGeneral(); });
+$('#oNom').addEventListener('change', aplicarNombres);
+$('#oSep').addEventListener('change', () => { sepObj = $('#oSep').checked ? SEP.separado : SEP.normal; });
+$('#pCerrar').addEventListener('click', deseleccionar);
+addEventListener('keydown', e => { if (e.key === 'Escape') { deseleccionar(); $('#res').hidden = true; } });
+
+// Búsqueda
+$('#q').addEventListener('input', () => {
+  const q = sinTilde($('#q').value.trim()), ul = $('#res');
+  if (!q) { ul.hidden = true; return; }
+  const L = [...EQ.values()].map(x => x.e).filter(e => [e.nombre, e.nombrePT, e.ip, e.area, e.areaInv].some(v => v && sinTilde(v).includes(q))).slice(0, 8);
+  ul.innerHTML = L.length ? L.map(e => `<li><button type="button" data-id="${e.id}"><span>${esc(e.nombre)}<br><small style="font-family:var(--f-txt);font-weight:400">${esc(e.areaInv || e.area || NOMBRE_TIPO[e.tipo])}, piso ${e.piso}</small></span><small>${esc(e.ip)}</small></button></li>`).join('') : '<li style="padding:10px;color:var(--mut)">Sin resultados</li>';
+  ul.hidden = false;
+});
+$('#res').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return; const id = b.dataset.id; const d = EQ.get(id); $('#res').hidden = true; $('#q').blur();
+  if (pisoFiltro && pisoFiltro !== d.e.piso) { pisoFiltro = 0; aplicarPisos(); } seleccionar(id); });
+
+// Toque / clic sobre equipos (sin confundir con arrastrar)
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let abajo = null;
+renderer.domElement.addEventListener('pointerdown', e => abajo = [e.clientX, e.clientY]);
+renderer.domElement.addEventListener('pointerup', e => {
+  if (!abajo || Math.hypot(e.clientX - abajo[0], e.clientY - abajo[1]) > 6) return;
+  ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(HIT.filter(h => h.parent.parent.visible), false)[0];
+  if (hit) seleccionar(hit.object.userData.id); else if (seleccion) deseleccionar();
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse') return;
+  ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(HIT.filter(h => h.parent.parent.visible), false)[0];
+  renderer.domElement.style.cursor = hit ? 'pointer' : '';
+  for (const x of EQ.values()) { x.hover = !!hit && hit.object.userData.id === x.e.id; if (!$('#oNom').checked && !['Switch', 'Router'].includes(x.e.tipo) && x.e.id !== seleccion) x.ol.visible = x.hover; }
+});
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); etiquetas.setSize(innerWidth, innerHeight); });
+$('#oSep').addEventListener('change', () => { if (!seleccion) vistaGeneral(); });
+
+
+/* ---------- Botones de zoom ---------- */
+function zoomPaso(f) {
+  vuelo = null; zoomPtr.set(0, 0);
+  zoomObj = THREE.MathUtils.clamp((zoomObj ?? camera.position.distanceTo(controls.target)) * f, controls.minDistance, controls.maxDistance);
+}
+$('#zMas').addEventListener('click', () => zoomPaso(0.8));
+$('#zMenos').addEventListener('click', () => zoomPaso(1.25));
+$('#zCentro').addEventListener('click', () => { if (seleccion) deseleccionar(); vistaGeneral(); });
+
+/* ---------- Fondo: lluvia de código ---------- */
+(() => {
+  const cv = $('#lluvia'), cx = cv.getContext('2d'); if (QUIETO) return;
+  const CH = '01{}<>/=;#$ABCDEF0123456789'.split(''), PAL = ['UGEL', 'TCP', '172.16', 'ARP', 'SSH', 'ROOT', 'PING'];
+  let cols, gotas, fs; const res = () => { cv.width = innerWidth; cv.height = innerHeight; fs = MOVIL ? 13 : 15; cols = Math.ceil(cv.width / fs); gotas = Array.from({ length: cols }, () => Math.random() * -60); };
+  res(); addEventListener('resize', res);
+  let ult = 0;
+  (function paso(ts) {
+    requestAnimationFrame(paso); if (ts - ult < 55) return; ult = ts;
+    cx.globalCompositeOperation = 'destination-out'; cx.fillStyle = 'rgba(0,0,0,.14)'; cx.fillRect(0, 0, cv.width, cv.height);
+    cx.globalCompositeOperation = 'source-over'; cx.font = `600 ${fs}px "Chakra Petch", monospace`;
+    for (let i = 0; i < cols; i++) {
+      const y = gotas[i] * fs; if (y < 0) { gotas[i] += 0.5; continue; }
+      const raro = Math.random() < 0.004, t = raro ? PAL[(Math.random() * PAL.length) | 0] : CH[(Math.random() * CH.length) | 0];
+      cx.fillStyle = raro ? 'rgba(160,102,255,.95)' : Math.random() < 0.08 ? 'rgba(220,250,255,.95)' : 'rgba(46,197,255,.75)';
+      cx.fillText(t, i * fs, y);
+      gotas[i] = y > cv.height && Math.random() > 0.975 ? Math.random() * -20 : gotas[i] + 1;
+    }
+  })(0);
+})();
+
+/* ---------- Fondo: foto distorsionada (fondo-persona.jpg en el servidor) ---------- */
+(() => {
+  const img = new Image();
+  img.onload = () => { document.querySelectorAll('#persona img').forEach(i => i.src = img.src); $('#persona').hidden = false; };
+  img.src = '/fondo/persona';
+})();
+/* ---------- Efectos de ambiente: escáner láser, haz del router, ondas, suelo y partículas ---------- */
+let BARRIDO, HAZ, POLVO, ISLOTES; const ONDAS = [], NUBES = [], ANILLOS = [];
+function crearEfectos() {
+  const w = CAJA.x2 - CAJA.x1 + 2, d = CAJA.z2 - CAJA.z1 + 2, cx = (CAJA.x1 + CAJA.x2) / 2, cz = (CAJA.z1 + CAJA.z2) / 2;
+  BARRIDO = new THREE.Group();
+  // Escáner: un contorno redondeado que recorre las islas de arriba abajo
+  const fb = rectRedondo(-w / 2, w / 2, -d / 2, d / 2, 2);
+  const pl = new THREE.Mesh(new THREE.ShapeGeometry(fb, 8).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x2ec5ff, opacity: 0.035, side: THREE.DoubleSide, ...ADD })); BARRIDO.add(pl);
+  BARRIDO.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(fb.getPoints(8).map(q => new THREE.Vector3(q.x, 0, -q.y))), new THREE.LineBasicMaterial({ color: 0x9fecff, opacity: 0.45, ...ADD })));
+  BARRIDO.position.set(cx, 0, cz); raiz.add(BARRIDO);
+  // Mar de nubes y anillos holográficos bajo las islas
+  const nube = (() => { const c = document.createElement('canvas'); c.width = c.height = 512; const x = c.getContext('2d');
+    for (let i = 0; i < 70; i++) { const px = Math.random() * 512, py = Math.random() * 512, r = 40 + Math.random() * 110;
+      for (const [ox, oy] of [[0, 0], [512, 0], [-512, 0], [0, 512], [0, -512]]) { const gr = x.createRadialGradient(px + ox, py + oy, 0, px + ox, py + oy, r);
+        gr.addColorStop(0, `rgba(255,255,255,${0.05 + Math.random() * 0.08})`); gr.addColorStop(1, 'rgba(255,255,255,0)'); x.fillStyle = gr; x.fillRect(0, 0, 512, 512); } }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; })();
+  for (const [y, col, rep, op] of [[-13, 0x2ec5ff, 3, 0.55], [-11, 0x8a5cff, 2, 0.4]]) {
+    const tx = nube.clone(); tx.needsUpdate = true; tx.repeat.set(rep, rep);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshBasicMaterial({ map: tx, alphaMap: TEX.brillo, color: col, opacity: op, ...ADD }));
+    m.rotation.x = -Math.PI / 2; m.position.set(cx, y, cz); scene.add(m); NUBES.push(m);
+  }
+  for (let i = 0; i < 3; i++) { const o = new THREE.Mesh(new THREE.RingGeometry(14 + i * 7, 14.25 + i * 7, 128), new THREE.MeshBasicMaterial({ color: i === 1 ? 0xa066ff : 0x2ec5ff, opacity: 0.35, side: THREE.DoubleSide, ...ADD }));
+    o.rotation.x = -Math.PI / 2; o.position.set(cx, -9.5 - i * 0.6, cz); scene.add(o); ANILLOS.push(o); }
+  // Islotes lejanos que orbitan despacio
+  ISLOTES = new THREE.Group(); ISLOTES.position.set(cx, 0, cz); scene.add(ISLOTES);
+  const nI = MOVIL ? 5 : 9;
+  for (let i = 0; i < nI; i++) {
+    const a = i / nI * Math.PI * 2 + 0.4, rad = 46 + (i % 3) * 13, r = 1.6 + (i % 4) * 0.9, g = new THREE.Group();
+    const top = new THREE.Mesh(geo('islaTop' + r, () => new THREE.CylinderGeometry(r, r * 0.92, 0.3, 7)), MAT.canto); top.position.y = -0.15; g.add(top);
+    const rb = roca(r * 1.8, r * 1.8, r * 1.6, i * 5.3 + 1, 2); rb.position.y = -0.3; g.add(rb);
+    if (i % 2 === 0) { const torre = caja(0.25, r * 0.9, 0.25, MAT.oscuro, 0, r * 0.45, 0); g.add(torre);
+      const luz = new THREE.Sprite(new THREE.SpriteMaterial({ map: TEX.brillo, color: i % 4 ? 0xa066ff : 0x2ec5ff, opacity: 0.9, ...ADD })); luz.scale.setScalar(1.4); luz.position.y = r * 0.95; g.add(luz); }
+    g.position.set(Math.cos(a) * rad, -4 + (i % 5) * 4.5, Math.sin(a) * rad * 0.75); g.userData.f = i; ISLOTES.add(g);
+  }
+  const bajo = new THREE.PointLight(0x7a3cff, 1.1, 90, 0); bajo.position.set(cx, -14, cz); scene.add(bajo);
+  const bajo2 = new THREE.PointLight(0x2ec5ff, 0.5, 70, 0); bajo2.position.set(cx + 18, -8, cz + 10); scene.add(bajo2);
+  scene.fog = new THREE.FogExp2(0x040b14, MOVIL ? 0.006 : 0.0072);
+  const r = [...EQ.values()].find(x => x.e.tipo === 'Router');
+  if (r) {
+    HAZ = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 70, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0x2ec5ff, opacity: 0.3, ...ADD }));
+    HAZ.userData.r = r; raiz.add(HAZ);
+    for (let i = 0; i < 3; i++) { const o = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 64), new THREE.MeshBasicMaterial({ color: 0x2ec5ff, opacity: 0.5, side: THREE.DoubleSide, ...ADD })); o.rotation.x = -Math.PI / 2; o.position.y = 0.06; r.g.add(o); ONDAS.push({ m: o, fase: i / 3 }); }
+  }
+  const n = MOVIL ? 160 : 380, pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) { pos[i * 3] = cx + (Math.random() - 0.5) * (w + 16); pos[i * 3 + 1] = -2.5 + Math.random() * 28; pos[i * 3 + 2] = cz + (Math.random() - 0.5) * (d + 16); }
+  const gp = new THREE.BufferGeometry(); gp.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  POLVO = new THREE.Points(gp, new THREE.PointsMaterial({ color: 0x8fe9ff, size: 0.16, map: TEX.brillo, opacity: 0.75, ...ADD })); scene.add(POLVO);
+}
+function animarEfectos(t, dt) {
+  const vivo = $('#oTraf').checked && !QUIETO;
+  if (BARRIDO) { const alto = (TOPO.pisos.length - 1) * sep + 2.2; BARRIDO.position.y = -0.4 + (Math.sin(t * 0.42) + 1) / 2 * alto; BARRIDO.visible = vivo && !pisoFiltro; }
+  if (HAZ) { const p = posMundo(HAZ.userData.r); HAZ.position.set(p.x, p.y + 20, p.z); HAZ.material.opacity = 0.22 + Math.sin(t * 3.2) * 0.08; HAZ.visible = !pisoFiltro || pisoFiltro === HAZ.userData.r.e.piso; }
+  for (const o of ONDAS) { const u = (t * 0.4 + o.fase) % 1; o.m.scale.setScalar(1 + u * 15); o.m.material.opacity = vivo ? (1 - u) * 0.5 : 0; }
+  const k = sep / SEP.separado;
+  for (const b of BASES) b.scale.y = k;
+  for (const c of CASCADAS) {
+    const pos = c.pts3.geometry.attributes.position, col = c.pts3.geometry.attributes.color;
+    c.est.forEach((e, i) => {
+      if (vivo) { e.f += dt * e.v; if (e.f > e.L * k) e.f = 0; }
+      const u = e.f / (e.L * k), a = (1 - u) * (u < 0.1 ? u * 10 : 1);
+      pos.setXYZ(i, e.x, -0.3 - e.f, e.z); col.setXYZ(i, e.c[0] * a, e.c[1] * a, e.c[2] * a);
+    });
+    pos.needsUpdate = col.needsUpdate = true; c.pts3.visible = c.pts3.parent.visible;
+  }
+  if (!QUIETO) {
+    NUBES.forEach((m, i) => { m.material.map.offset.x = t * (i ? -0.004 : 0.003); m.material.map.offset.y = t * (i ? 0.002 : 0.0025); });
+    ANILLOS.forEach((o, i) => { o.rotation.z = t * (i % 2 ? -0.05 : 0.04); });
+    if (ISLOTES) { ISLOTES.rotation.y = t * 0.012; ISLOTES.children.forEach(g => { g.position.y += Math.sin(t * 0.6 + g.userData.f) * dt * 0.25; }); }
+    raiz.position.y = Math.sin(t * 0.5) * 0.18;
+  }
+  if (POLVO && vivo) { const a = POLVO.geometry.attributes.position; for (let i = 0; i < a.count; i++) { let y = a.getY(i) + dt * (0.18 + (i % 7) * 0.03); if (y > 25.5) y = -2.5; a.setY(i, y); } a.needsUpdate = true; }
+}
+setInterval(() => { $('#reloj').textContent = new Date().toLocaleTimeString('es-PE', { hour12: false }); }, 1000);
+addEventListener('pointermove', e => { const r = document.documentElement.style; r.setProperty('--mx', (e.clientX / innerWidth - 0.5).toFixed(3)); r.setProperty('--my', (e.clientY / innerHeight - 0.5).toFixed(3)); });
+
+/* ---------- Modo reposo para TV: gira solo, recorre los pisos y muestra mensajes ---------- */
+let DATOS = null, reposo = false, ultAct = performance.now(), MSG = [], iMsg = 0, tMsg = 0, tFoco = 0, tTour = 0, iTour = 0, escribir = null, FOCO = null;
+const ESPERA = TV ? 4 : 45; // segundos sin tocar nada
+const actividad = () => { ultAct = performance.now(); if (reposo) salirReposo(); };
+for (const ev of ['pointerdown', 'wheel', 'keydown', 'touchstart']) addEventListener(ev, actividad, { passive: true, capture: true });
+let ultMov = [0, 0]; addEventListener('pointermove', e => { if (Math.hypot(e.clientX - ultMov[0], e.clientY - ultMov[1]) > 12) { ultMov = [e.clientX, e.clientY]; actividad(); } }, { passive: true, capture: true });
+const CONSEJOS = [
+  ['SEGURIDAD', 'Bloquea tu PC con Windows + L cada vez que te levantes del escritorio.'],
+  ['SEGURIDAD', 'Nunca compartas tu contraseña, ni siquiera con el área de Informática.'],
+  ['SEGURIDAD', '¿Correo sospechoso? No abras enlaces ni adjuntos: avisa a Informática.'],
+  ['SEGURIDAD', 'Las memorias USB desconocidas pueden traer virus. Analízalas antes de abrirlas.'],
+  ['SEGURIDAD', 'Usa contraseñas largas: una frase de varias palabras es más segura que una palabra rara.'],
+  ['BUENAS PRÁCTICAS', 'Reinicia tu PC al menos una vez por semana para aplicar las actualizaciones.'],
+  ['BUENAS PRÁCTICAS', 'Guarda tus archivos importantes en más de un lugar: un respaldo salva tu trabajo.'],
+  ['BUENAS PRÁCTICAS', 'No cambies la IP de tu equipo por tu cuenta: una IP repetida deja a dos equipos sin red.'],
+  ['DATO', 'Una dirección IPv4 tiene cuatro números del 0 al 255, por ejemplo 172.16.14.25.'],
+  ['DATO', 'El DHCP es el servicio que reparte automáticamente las IPs a los equipos de la red.'],
+  ['DATO', 'La MAC es la huella única de cada tarjeta de red; con ella el sistema reconoce cada equipo.'],
+  ['DATO', 'Un switch conecta los equipos de un mismo piso; el router conecta toda la red con internet.'],
+  ['DATO', 'Los cables troncales, en amarillo, unen los switches de los tres pisos con el router.'],
+  ['SOPORTE', '¿Algún problema con tu equipo? Regístralo en el sistema de tickets de Soporte T.I.'],
+];
+function mensajes() {
+  const L = [];
+  if (DATOS) {
+    L.push(['RED EN VIVO', `${DATOS.on} de ${DATOS.tot} equipos están en línea en este momento.`]);
+    for (const p of DATOS.pisos.slice().reverse()) L.push(['RED EN VIVO', `Piso ${p.n}: ${p.o} de ${p.t} equipos activos.`]);
+    if (DATOS.nd) L.push(['DHCP', `${DATOS.nd} equipos están trabajando con una IP que les dio el DHCP.`]);
+    L.push(['ESCÁNER', `La red se escanea cada 5 minutos. Último escaneo: ${hace(DATOS.ult)}.`]);
+  }
+  const sw = TOPO.equipos.filter(e => e.tipo === 'Switch').length;
+  L.push(['INFRAESTRUCTURA', `${sw} switches y ${TOPO.enlaces.length} cables conectan los ${TOPO.pisos.length} pisos de la sede.`]);
+  L.push(['INFRAESTRUCTURA', 'Todo el tráfico hacia internet sale por el router MikroTik RB4011, la puerta de enlace de la red.']);
+  // Intercala datos en vivo con consejos, sin repetir seguido
+  const c = CONSEJOS.slice().sort(() => Math.random() - 0.5), out = [];
+  for (let i = 0; i < Math.max(L.length, c.length); i++) { if (L[i]) out.push(L[i]); if (c[i]) out.push(c[i]); }
+  return out;
+}
+const COL_CAT = { 'RED EN VIVO': '#7dffc0', DHCP: '#3DEBFF', 'ESCÁNER': '#2EC5FF', INFRAESTRUCTURA: '#F2B300', SEGURIDAD: '#ff8fa0', 'BUENAS PRÁCTICAS': '#A066FF', DATO: '#2EC5FF', SOPORTE: '#7fe6ff' };
+function mostrarMensaje() {
+  if (!MSG.length || iMsg >= MSG.length) { MSG = mensajes(); iMsg = 0; }
+  const [cat, txt] = MSG[iMsg++], p = $('#mTxt');
+  $('#mCat').textContent = cat; $('.tvmsg').style.setProperty('--c', COL_CAT[cat] || 'var(--neon)');
+  clearInterval(escribir); p.textContent = ''; let i = 0;
+  escribir = setInterval(() => { p.textContent = txt.slice(0, ++i); if (i >= txt.length) clearInterval(escribir); }, QUIETO ? 1 : 28);
+}
+function actualizarTV() {
+  if (!DATOS) return;
+  $('#kOn').textContent = DATOS.on; $('#kDhcp').textContent = DATOS.nd; $('#kEq').textContent = TOPO.equipos.length;
+  const partes = [`RED UGEL CHINCHA EN VIVO`, `${DATOS.on}/${DATOS.tot} equipos en línea`, ...DATOS.pisos.slice().reverse().map(p => `PISO ${p.n}: ${p.o}/${p.t}`),
+    `${DATOS.nd} por DHCP`, `Escaneo ${hace(DATOS.ult)}`, `Bloquea tu PC con Windows + L`, `Reporta incidencias en Soporte T.I.`];
+  const t = $('#tick'); t.innerHTML = partes.map(esc).join('<i>◆</i>'); t.style.setProperty('--dur', Math.max(40, partes.join('').length * 0.32) + 's');
+}
+function relojTV() {
+  const d = new Date(); $('#tvHora').textContent = d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const f = d.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }); $('#tvFecha').textContent = f.charAt(0).toUpperCase() + f.slice(1);
+}
+setInterval(relojTV, 10000); relojTV();
+// Equipo destacado: anillo y etiqueta con el área (sin nombres de personas)
+function crearFoco() {
+  const g = new THREE.Group();
+  const r = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.85, 48), new THREE.MeshBasicMaterial({ color: 0x7fe6ff, opacity: 0.9, side: THREE.DoubleSide, ...ADD })); r.rotation.x = -Math.PI / 2; r.position.y = 0.05; g.add(r);
+  const h = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 6, 8, 1, true), new THREE.MeshBasicMaterial({ color: 0x7fe6ff, opacity: 0.6, ...ADD })); h.position.y = 3; g.add(h);
+  const el = document.createElement('div'); el.className = 'l-foco'; const o = new CSS2DObject(el); o.position.y = 2.2; g.add(o);
+  FOCO = { g, r, el, o, t: 0 };
+}
+function destacar() {
+  const L = [...EQ.values()].filter(d => !['Switch', 'Router'].includes(d.e.tipo) && encendido(d.e));
+  if (!L.length) return; const d = L[(Math.random() * L.length) | 0];
+  if (!FOCO) crearFoco(); d.g.add(FOCO.g); FOCO.t = 0; FOCO.dur = 6;
+  const dh = dhcpDe(d.e);
+  FOCO.el.innerHTML = `${esc(d.e.areaInv || d.e.area || 'Red UGEL')}<small>${esc(NOMBRE_TIPO[d.e.tipo] || 'Equipo')} en línea · piso ${d.e.piso}${dh ? ' · por DHCP' : ''}</small>`;
+}
+function entrarReposo() {
+  reposo = true; document.body.classList.add('reposo'); $('#res').hidden = true;
+  if (seleccion) deseleccionar(); if (pisoFiltro) { pisoFiltro = 0; aplicarPisos(); }
+  vistaGeneral(); controls.autoRotate = !QUIETO; controls.autoRotateSpeed = 0.35;
+  const ah = reloj.elapsedTime; tMsg = ah; tFoco = ah - 4; tTour = ah; iTour = 0; MSG = []; mostrarMensaje(); actualizarTV();
+}
+function salirReposo() {
+  reposo = false; document.body.classList.remove('reposo'); controls.autoRotate = false; clearInterval(escribir);
+  if (FOCO && FOCO.g.parent) FOCO.g.parent.remove(FOCO.g);
+}
+// Recorrido: vista general, luego se acerca a cada piso y vuelve
+function pasoTour() {
+  const pasos = [0, ...TOPO.pisos.map(p => p.n).reverse(), 0];
+  const n = pasos[iTour++ % pasos.length];
+  if (!n) { vistaGeneral(); return; }
+  const c = new THREE.Vector3((CAJA.x1 + CAJA.x2) / 2, (n - 1) * sep + raiz.position.y, (CAJA.z1 + CAJA.z2) / 2);
+  volarA(c, (CAJA.x2 - CAJA.x1) * (camera.aspect < 1 ? 1.25 : 0.62));
+}
+function animarReposo(t, dt) {
+  if (!LIMPIO && t - tMsg > 9) { tMsg = t; mostrarMensaje(); }
+  if (t - tFoco > 7) { tFoco = t; destacar(); }
+  if (t - tTour > 16) { tTour = t; pasoTour(); }
+  if (FOCO && FOCO.g.parent) { FOCO.t += dt; const u = (FOCO.t * 0.8) % 1; FOCO.r.scale.setScalar(1 + u * 1.6); FOCO.r.material.opacity = 0.9 * (1 - u); FOCO.el.style.opacity = FOCO.t < (FOCO.dur || 6) ? 1 : 0; }
+}
+// Silvanas (pantalla de la TV) puede pedir al mapa que vuele a un área: { tipo: 'enfocar', texto: 'Tesorería', etiqueta: 'Ticket TK-000047' }
+addEventListener('message', ev => {
+  const m = ev.data; if (!m || m.tipo !== 'enfocar' || !TOPO || !EQ.size) return;
+  const q = sinTilde(m.texto).trim(); if (q.length < 3) return;
+  const area = d => sinTilde(d.e.areaInv || d.e.area || '');
+  const L = [...EQ.values()].filter(d => !['Switch', 'Router'].includes(d.e.tipo));
+  const d = L.find(d => area(d).includes(q)) || L.find(d => area(d).length > 3 && q.includes(area(d))) || L.find(d => sinTilde(d.e.area).includes(q));
+  if (!d) return;
+  if (!FOCO) crearFoco(); d.g.add(FOCO.g); FOCO.t = 0; FOCO.dur = 25;
+  FOCO.el.innerHTML = `${esc(m.etiqueta || 'Aviso')}<small>${esc(d.e.areaInv || d.e.area)} · piso ${d.e.piso}</small>`;
+  const ah = reloj.elapsedTime; tFoco = ah + 20; tTour = ah + 12;
+  volarA(posMundo(d), 16);
+});
+// En la TV: intenta que la pantalla no se apague y recarga cada 6 horas para mantenerse fresca
+if (TV) {
+  const wl = () => navigator.wakeLock && navigator.wakeLock.request('screen').catch(() => {});
+  wl(); document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') wl(); });
+  setTimeout(() => location.reload(), 6 * 3600e3);
+}
+
+/* ---------- Bucle ---------- */
+const reloj = new THREE.Clock(); let intro = QUIETO ? 1 : 0, ultOrden = 0;
+function bucle() {
+  requestAnimationFrame(bucle);
+  const dt = Math.min(reloj.getDelta(), 0.05), t = reloj.elapsedTime;
+  // Entrada: los pisos suben a su lugar una sola vez
+  if (intro < 1) intro = Math.min(1, intro + dt / 1.4);
+  const k = 1 - Math.pow(1 - intro, 3);
+  if (Math.abs(sep - sepObj) > 0.01) sep += (sepObj - sep) * Math.min(1, dt * 5);
+  for (const [n, g] of PISOS) g.position.y = (n - 1) * sep * k;
+  if (intro < 1 || Math.abs(sep - sepObj) > 0.01 || !CABLES[0]?.curva) trazarCables();
+  if (vuelo) { vuelo.t = Math.min(1, vuelo.t + dt / 0.9); const e = 1 - Math.pow(1 - vuelo.t, 3);
+    camera.position.lerpVectors(vuelo.c0, vuelo.c1, e); controls.target.lerpVectors(vuelo.t0, vuelo.t1, e); if (vuelo.t >= 1) vuelo = null; }
+  for (const d of EQ.values()) if (d.g.userData.anillo) d.g.userData.anillo.rotation.z = t * 0.8;
+  if (anillo && anillo.parent && !QUIETO) anillo.scale.setScalar(1 + Math.sin(t * 4) * 0.08);
+  if (PART) moverParticulas(t);
+  animarEfectos(t, dt);
+  aplicarZoom(dt);
+  controls.update(); renderer.render(scene, camera); etiquetas.render(scene, camera);
+  if (t - ultOrden > 0.12) { ultOrden = t; ordenarEtiquetas(); }
+  if (!reposo && performance.now() - ultAct > ESPERA * 1000 && $('#carga').classList.contains('fuera')) entrarReposo();
+  if (reposo) animarReposo(t, dt);
+}
+
+/* ---------- Inicio ---------- */
+try {
+  const t = await (await fetch('/api/topologia', { cache: 'no-store' })).json();
+  if (!t.equipos || !t.equipos.length) throw new Error(t.error || 'Topología vacía');
+  linea(`Topología cargada: ${t.equipos.length} equipos, ${t.enlaces.length} cables, ${t.pisos.length} pisos`);
+  linea(`Inventario sincronizado: ${t.equipos.filter(e => e.invId).length} equipos con ficha`);
+  construir(t); crearParticulas(); crearEfectos(); aplicarPisos(); aplicarNombres();
+  linea('Vista 3D lista', 'ok');
+  { const { t: tg, c } = encuadre(); controls.target.copy(tg); camera.position.copy(c).add(new THREE.Vector3(0, 6, 8)); vistaGeneral(); }
+  bucle(); estado();
+  setTimeout(() => { $('#carga').classList.add('fuera'); setTimeout(() => $('#carga').hidden = true, 750); }, QUIETO ? 0 : 1100);
+  const q = new URLSearchParams(location.search).get('ip');
+  if (q) { const d = [...EQ.values()].find(x => x.e.ip === q); if (d) setTimeout(() => seleccionar(d.e.id), 1500); }
+} catch (err) {
+  linea('No se pudo cargar el mapa: ' + err.message, 'mal');
+}
+</script>
+</body>
+</html>

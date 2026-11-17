@@ -1,0 +1,9 @@
+# Configuración y datos reales de la red (no se publican)
+config.json
+inventario.json
+inventario.csv
+inventario.tmp
+data.json
+topologia.json
+*.log
+node_modules/

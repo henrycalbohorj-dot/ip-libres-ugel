@@ -1,0 +1,21 @@
+{
+  "puerto": 8090,
+  "intervaloMinutos": 5,
+  "diasAusente": 7,
+  "concurrencia": 100,
+  "pin": "",
+  "inventario": {
+    "url": "https://docs.google.com/spreadsheets/d/ID_DE_TU_HOJA/export?format=csv&gid=0"
+  },
+  "segmentos": [
+    {
+      "nombre": "Principal",
+      "red": "192.168.1",
+      "desde": 1,
+      "hasta": 254,
+      "sugerirDesde": 20,
+      "fijas": { "1": "Gateway / Router", "10": "Servidor" }
+    }
+  ],
+  "dhcp": { "token": "GENERA_UN_TOKEN_ALEATORIO" }
+}

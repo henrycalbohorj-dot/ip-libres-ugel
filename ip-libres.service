@@ -1,0 +1,19 @@
+# Servicio para Ubuntu Server. Copiar a /etc/systemd/system/ip-libres.service
+[Unit]
+Description=IP Libres UGEL Chincha (escáner de red e inventario)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ip-libres
+ExecStart=/usr/bin/node /opt/ip-libres/server.js
+Restart=always
+RestartSec=5
+User=iplibres
+# ping necesita este permiso cuando el servicio no corre como root
+AmbientCapabilities=CAP_NET_RAW
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
