@@ -24,9 +24,6 @@ sudo cp ip-libres.service /etc/systemd/system/ && sudo systemctl enable --now ip
 
 Abre `http://IP_DEL_SERVIDOR:8090`. Más detalles de uso en [LEEME.md](LEEME.md).
 
-## Datos que no se publican
-
-`config.json`, `inventario.json`, `inventario.csv`, `data.json` y `topologia.json` contienen la red real de la institución y están en `.gitignore`. Se incluyen `config.example.json` e `inventario.example.csv` como plantilla.
 
 ---
-Desarrollado por **Henry Braulio Pachas Dávalos** · Área de Informática, UGEL Chincha.
+Desarrollado por **Ing. Henry Braulio Pachas Dávalos** · Área de Informática, UGEL Chincha.
